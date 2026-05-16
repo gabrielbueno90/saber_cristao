@@ -1,0 +1,5 @@
+// Configuração global do app
+class AppConfig {
+  static const String supabaseUrl = 'SUA_SUPABASE_URL';
+  static const String supabaseAnonKey = 'SUA_SUPABASE_ANON_KEY';
+}
