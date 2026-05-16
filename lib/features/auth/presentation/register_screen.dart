@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -33,30 +34,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: Container(
         color: AppTheme.backgroundLight,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           children: [
+            const Text(
+              'Criar conta',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+            AppSpacing.v8,
+            const Text('Entre para salvar seu progresso e avançar nas fases.'),
+            AppSpacing.v24,
             TextField(
               controller: nameController,
               decoration: const InputDecoration(labelText: 'Nome'),
             ),
-            const SizedBox(height: 12),
+            AppSpacing.v16,
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 12),
+            AppSpacing.v16,
             TextField(
               controller: passwordController,
               obscureText: true,
               decoration: const InputDecoration(labelText: 'Senha'),
             ),
-            const SizedBox(height: 12),
+            AppSpacing.v16,
             TextField(
               controller: confirmController,
               obscureText: true,
               decoration: const InputDecoration(labelText: 'Confirmar senha'),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.v24,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -77,10 +85,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: const Text('Criar conta'),
               ),
             ),
-            const SizedBox(height: 8),
+            AppSpacing.v12,
             OutlinedButton(
               onPressed: () => ref.read(authControllerProvider.notifier).signInWithGoogle(),
               child: const Text('Entrar com Google'),
+            ),
+            AppSpacing.v12,
+            TextButton(
+              onPressed: () => context.go('/login'),
+              child: const Text('Já tenho conta'),
             ),
           ],
         ),

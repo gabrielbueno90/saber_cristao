@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
 
 class StoreScreen extends ConsumerWidget {
@@ -9,34 +10,36 @@ class StoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final credits = ref.watch(creditsControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Loja de creditos')),
+      appBar: AppBar(title: const Text('Loja de créditos')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Text('Seus creditos atuais: $credits'),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text('Seus créditos atuais: $credits'),
             ),
           ),
-          const SizedBox(height: 8),
+          AppSpacing.v16,
           _CreditPackCard(
-            title: '10 creditos',
+            title: '10 créditos',
             subtitle: 'Ideal para continuar fases e recuperar vidas.',
             onTap: () => ref.read(creditsControllerProvider.notifier).addCredits(10),
           ),
+          AppSpacing.v16,
           _CreditPackCard(
-            title: '50 creditos',
+            title: '50 créditos',
             subtitle: 'Perfeito para comprar dicas e segunda chance.',
             onTap: () => ref.read(creditsControllerProvider.notifier).addCredits(50),
           ),
+          AppSpacing.v16,
           _CreditPackCard(
-            title: '150 creditos',
-            subtitle: 'Pacote avancado para evoluir mais rapido.',
+            title: '150 créditos',
+            subtitle: 'Pacote avançado para evoluir mais rápido.',
             onTap: () => ref.read(creditsControllerProvider.notifier).addCredits(150),
           ),
-          const SizedBox(height: 10),
-          const Text('Os creditos podem ser usados para continuar fases, comprar dicas, recuperar vidas e segunda chance.'),
+          AppSpacing.v24,
+          const Text('Os créditos podem ser usados para continuar fases, comprar dicas, recuperar vidas e segunda chance.'),
         ],
       ),
     );
@@ -58,14 +61,14 @@ class _CreditPackCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
+            AppSpacing.v8,
             Text(subtitle),
-            const SizedBox(height: 12),
+            AppSpacing.v16,
             ElevatedButton(
               onPressed: onTap,
               child: const Text('Selecionar pacote'),

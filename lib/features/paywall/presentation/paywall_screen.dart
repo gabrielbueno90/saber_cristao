@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 
 class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key});
@@ -6,31 +7,36 @@ class PaywallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cristao Premium')),
+      appBar: AppBar(title: const Text('Cristão Premium')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Cristao Premium', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 8),
-                  Text('Jogue sem anuncios e receba beneficios diarios.'),
+                children: [
+                  Text('Cristão Premium', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
                   SizedBox(height: 12),
-                  Text('- Sem anuncios'),
-                  Text('- Bonus diario de creditos'),
+                  Text('Jogue sem anúncios e receba benefícios diários.'),
+                  SizedBox(height: 16),
+                  Text('- Sem anúncios'),
+                  SizedBox(height: 8),
+                  Text('- Bônus diário de créditos'),
+                  SizedBox(height: 8),
                   Text('- Mais vidas'),
-                  Text('- Experiencia limpa para estudar e jogar'),
+                  SizedBox(height: 8),
+                  Text('- Experiência limpa para estudar e jogar'),
+                  SizedBox(height: 8),
                   Text('- Trilhas especiais futuras'),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          AppSpacing.v16,
           _PlanCard(title: 'Mensal', price: 'R\$ 14,90 / mes'),
+          AppSpacing.v16,
           _PlanCard(title: 'Anual com desconto', price: 'R\$ 119,90 / ano'),
         ],
       ),
@@ -48,18 +54,18 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
+            AppSpacing.v8,
             Text(price),
-            const SizedBox(height: 12),
+            AppSpacing.v16,
             ElevatedButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Integracao de assinatura sera ativada em breve.')),
+                  const SnackBar(content: Text('Integração de assinatura será ativada em breve.')),
                 );
               },
               child: const Text('Assinar plano'),

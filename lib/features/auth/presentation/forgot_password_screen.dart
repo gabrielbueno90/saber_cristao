@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -27,14 +28,24 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       body: Container(
         color: AppTheme.backgroundLight,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+            const Text(
+              'Recupere sua senha',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+            AppSpacing.v8,
+            const Text(
+              'Informe seu email para receber o link de recuperação.',
+            ),
+            AppSpacing.v24,
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.v24,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
 
@@ -53,31 +54,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Saber Cristao',
+                      'Saber Cristão',
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textDark,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    AppSpacing.v8,
                     const Text(
-                      'Aprenda a Biblia jogando, avance por desafios e fortaleça sua fe.',
+                      'Aprenda a Bíblia jogando, avance por desafios e fortaleça sua fé.',
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 18),
+                    AppSpacing.v24,
                     TextField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(labelText: 'Email'),
                     ),
-                    const SizedBox(height: 12),
+                    AppSpacing.v12,
                     TextField(
                       controller: passwordController,
                       obscureText: true,
                       decoration: const InputDecoration(labelText: 'Senha'),
                     ),
-                    const SizedBox(height: 16),
+                    AppSpacing.v16,
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -92,7 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: const Text('Entrar'),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    AppSpacing.v12,
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
@@ -104,14 +105,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: const Text('Entrar com Google'),
                       ),
                     ),
+                    AppSpacing.v12,
                     TextButton(
                       onPressed: () => context.push('/register'),
                       child: const Text('Criar conta'),
                     ),
+                    AppSpacing.v8,
                     TextButton(
                       onPressed: () => context.push('/forgot-password'),
                       child: const Text('Esqueci minha senha'),
                     ),
+                    AppSpacing.v12,
                     if (authState.status == AuthStatus.error)
                       Text(
                         authState.errorMessage ?? 'Erro de autenticacao',

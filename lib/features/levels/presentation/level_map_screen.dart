@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 
 class LevelMapScreen extends StatelessWidget {
   const LevelMapScreen({super.key});
@@ -18,13 +19,13 @@ class LevelMapScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mapa de fases')),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: GridView.builder(
           itemCount: levels.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
+            mainAxisSpacing: AppSpacing.md,
+            crossAxisSpacing: AppSpacing.md,
             childAspectRatio: 1.05,
           ),
           itemBuilder: (context, index) {
@@ -40,7 +41,7 @@ class LevelMapScreen extends StatelessWidget {
                 if (!unlocked) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Essa fase ainda esta bloqueada. Continue sua jornada.'),
+                      content: Text('Essa fase ainda está bloqueada. Continue sua jornada.'),
                     ),
                   );
                   return;
@@ -50,7 +51,7 @@ class LevelMapScreen extends StatelessWidget {
               child: Card(
                 color: unlocked ? AppTheme.parchment : AppTheme.cream,
                 child: Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -61,13 +62,13 @@ class LevelMapScreen extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      AppSpacing.v8,
                       Text(
-                        completed ? 'Concluida' : (unlocked ? 'Desbloqueada' : 'Bloqueada'),
+                        completed ? 'Concluída' : (unlocked ? 'Desbloqueada' : 'Bloqueada'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 12),
                       ),
-                      const SizedBox(height: 6),
+                      AppSpacing.v8,
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(

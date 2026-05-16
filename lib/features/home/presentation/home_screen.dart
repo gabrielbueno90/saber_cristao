@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
@@ -19,7 +20,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saber Cristao'),
+        title: const Text('Saber Cristão'),
         actions: [
           if (auth.user != null)
             IconButton(
@@ -47,25 +48,25 @@ class HomeScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Saber Cristao',
+                    'Saber Cristão',
                     style: TextStyle(
                       color: AppTheme.softGold,
                       fontSize: 30,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 12),
                   Text(
-                    'Aprenda a Biblia, avance por desafios e fortaleça sua fe.',
+                    'Aprenda a Bíblia, avance por desafios e fortaleça sua fé.',
                     style: TextStyle(color: AppTheme.cream),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            AppSpacing.v16,
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Row(
                   children: [
                     Expanded(
@@ -84,32 +85,35 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            AppSpacing.v24,
             ElevatedButton(
               onPressed: () => context.push('/quiz'),
               child: const Text('Comecar desafio'),
             ),
+            AppSpacing.v12,
             OutlinedButton(
               onPressed: () => context.push('/levels'),
               child: const Text('Ver fases'),
             ),
+            AppSpacing.v12,
             OutlinedButton(
               onPressed: () => context.push('/store'),
               child: const Text('Creditos e loja'),
             ),
+            AppSpacing.v16,
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Cristao Premium',
+                      'Cristão Premium',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 6),
-                    const Text('Jogue sem anuncios e receba beneficios diarios.'),
-                    const SizedBox(height: 12),
+                    AppSpacing.v8,
+                    const Text('Jogue sem anúncios e receba benefícios diários.'),
+                    AppSpacing.v16,
                     ElevatedButton(
                       onPressed: () => context.push('/paywall'),
                       child: const Text('Conhecer Premium'),
@@ -118,6 +122,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            AppSpacing.v12,
             TextButton(
               onPressed: () => context.push('/profile'),
               child: const Text('Abrir perfil'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 import 'package:saber_cristao/features/quiz/presentation/quiz_controller.dart';
@@ -25,23 +26,23 @@ class QuizScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Fase ${session.level}')),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Text(
                   question.question,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.v16,
             ...List.generate(question.options.length, (index) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: OutlinedButton(
                   onPressed: () async {
                     final result = controller.answer(index);
@@ -74,7 +75,7 @@ class QuizScreen extends ConsumerWidget {
             }),
             const Spacer(),
             Text(
-              'Referencia: ${question.bibleReference}',
+              'Referência: ${question.bibleReference}',
               style: const TextStyle(color: AppTheme.textMuted),
             ),
           ],
