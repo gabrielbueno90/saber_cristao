@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
 import 'package:saber_cristao/features/auth/presentation/forgot_password_screen.dart';
@@ -107,7 +108,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/settings',
-        builder: (_, state) => const _SimpleScreen(title: 'Configuracoes'),
+        builder: (_, state) => const _SimpleScreen(title: 'Configurações'),
       ),
     ],
   );
@@ -139,7 +140,21 @@ class _SimpleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Center(child: Text(title)),
+      body: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(child: Text(title)),
+            AppSpacing.v16,
+            OutlinedButton(
+              onPressed: () => context.go('/home'),
+              child: const Text('Voltar para início'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

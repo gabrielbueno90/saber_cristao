@@ -58,6 +58,11 @@ class OutOfLivesScreen extends ConsumerWidget {
               onPressed: () => context.push('/paywall'),
               child: const Text('Conhecer Premium'),
             ),
+            AppSpacing.v24,
+            TextButton(
+              onPressed: () => context.go('/home'),
+              child: const Text('Voltar para início'),
+            ),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
@@ -63,6 +64,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 },
                 child: const Text('Enviar link'),
               ),
+            ),
+            AppSpacing.v16,
+            TextButton(
+              onPressed: () => context.go('/login'),
+              child: const Text('Voltar para Login'),
             ),
             ],
           ),

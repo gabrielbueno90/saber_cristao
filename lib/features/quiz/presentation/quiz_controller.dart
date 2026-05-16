@@ -48,39 +48,42 @@ class QuizController extends StateNotifier<QuizSessionModel> {
         );
 
   final List<QuestionModel> _questions;
+  QuizResultModel? _lastResult;
 
   QuestionModel get currentQuestion => _questions[state.index];
   bool get isLastQuestion => state.index >= _questions.length - 1;
+  QuizResultModel? get lastResult => _lastResult;
 
-  QuizResultModel answer(int index) {
+  QuizResultModel evaluateAnswer(int index) {
     final isCorrect = currentQuestion.correctIndex == index;
     final score = isCorrect ? state.score + 100 : state.score;
     final correct = isCorrect ? state.correctCount + 1 : state.correctCount;
     final wrong = isCorrect ? state.wrongCount : state.wrongCount + 1;
-
-    if (isLastQuestion) {
-      final stars = _calculateStars(correct: correct, wrong: wrong);
-      return QuizResultModel(
-        level: state.level,
-        score: score,
-        stars: stars,
-        correctCount: correct,
-        wrongCount: wrong,
-      );
-    }
-
-    state = state.copyWith(
-      index: state.index + 1,
-      score: score,
-      correctCount: correct,
-      wrongCount: wrong,
-    );
+    final stars = isLastQuestion ? _calculateStars(correct: correct, wrong: wrong) : 0;
     return QuizResultModel(
       level: state.level,
       score: score,
-      stars: 0,
+      stars: stars,
       correctCount: correct,
       wrongCount: wrong,
+    );
+  }
+
+  void advanceWithResult(QuizResultModel result) {
+    _lastResult = result;
+    if (!isLastQuestion) {
+      state = state.copyWith(
+        index: state.index + 1,
+        score: result.score,
+        correctCount: result.correctCount,
+        wrongCount: result.wrongCount,
+      );
+      return;
+    }
+    state = state.copyWith(
+      score: result.score,
+      correctCount: result.correctCount,
+      wrongCount: result.wrongCount,
     );
   }
 
@@ -92,6 +95,7 @@ class QuizController extends StateNotifier<QuizSessionModel> {
   }
 
   void restart() {
+    _lastResult = null;
     state = state.copyWith(
       index: 0,
       score: 0,

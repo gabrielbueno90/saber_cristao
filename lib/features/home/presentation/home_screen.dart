@@ -88,7 +88,7 @@ class HomeScreen extends ConsumerWidget {
             AppSpacing.v24,
             ElevatedButton(
               onPressed: () => context.push('/quiz'),
-              child: const Text('Comecar desafio'),
+              child: const Text('Começar desafio'),
             ),
             AppSpacing.v12,
             OutlinedButton(
@@ -98,7 +98,7 @@ class HomeScreen extends ConsumerWidget {
             AppSpacing.v12,
             OutlinedButton(
               onPressed: () => context.push('/store'),
-              child: const Text('Creditos e loja'),
+              child: const Text('Créditos e loja'),
             ),
             AppSpacing.v16,
             Card(

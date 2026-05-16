@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
 
@@ -40,6 +41,11 @@ class StoreScreen extends ConsumerWidget {
           ),
           AppSpacing.v24,
           const Text('Os créditos podem ser usados para continuar fases, comprar dicas, recuperar vidas e segunda chance.'),
+          AppSpacing.v24,
+          OutlinedButton(
+            onPressed: () => context.go('/home'),
+            child: const Text('Voltar para início'),
+          ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 
 class PaywallScreen extends StatelessWidget {
@@ -38,6 +39,11 @@ class PaywallScreen extends StatelessWidget {
           _PlanCard(title: 'Mensal', price: 'R\$ 14,90 / mes'),
           AppSpacing.v16,
           _PlanCard(title: 'Anual com desconto', price: 'R\$ 119,90 / ano'),
+          AppSpacing.v24,
+          OutlinedButton(
+            onPressed: () => context.go('/home'),
+            child: const Text('Voltar para início'),
+          ),
         ],
       ),
     );
