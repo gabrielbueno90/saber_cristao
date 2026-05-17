@@ -16,30 +16,44 @@ class AuthController extends StateNotifier<AuthState> {
     final repo = _ref.read(authRepositoryProvider);
     final user = await repo.currentUser();
     if (user == null) {
-      state = const AuthState.unauthenticated();
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     } else {
       await repo.ensureProfile(user);
-      state = AuthState.authenticated(user);
+      state = AuthState.authenticated(
+        user,
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     }
 
     _subscription = repo.authStateChanges().listen((event) async {
       if (event == null) {
-        state = const AuthState.unauthenticated();
+        state = AuthState(
+          status: AuthStatus.unauthenticated,
+          isUsingSupabase: repo.isUsingSupabase,
+        );
         return;
       }
       await repo.ensureProfile(event);
-      state = AuthState.authenticated(event);
+      state = AuthState.authenticated(
+        event,
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     });
   }
 
   Future<void> signInWithEmail(String email, String password) async {
-    state = const AuthState.loading();
+    final repo = _ref.read(authRepositoryProvider);
+    state = AuthState.loading(isUsingSupabase: repo.isUsingSupabase);
     try {
-      await _ref
-          .read(authRepositoryProvider)
-          .signInWithEmail(email: email, password: password);
+      await repo.signInWithEmail(email: email, password: password);
     } catch (e) {
-      state = AuthState.error('Nao foi possivel entrar. Verifique os dados.');
+      state = AuthState.error(
+        'Nao foi possivel entrar. Verifique os dados.',
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     }
   }
 
@@ -48,37 +62,53 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String password,
   }) async {
-    state = const AuthState.loading();
+    final repo = _ref.read(authRepositoryProvider);
+    state = AuthState.loading(isUsingSupabase: repo.isUsingSupabase);
     try {
-      await _ref.read(authRepositoryProvider).registerWithEmail(
+      await repo.registerWithEmail(
             name: name,
             email: email,
             password: password,
           );
     } catch (_) {
-      state = AuthState.error('Nao foi possivel criar conta agora.');
+      state = AuthState.error(
+        'Nao foi possivel criar conta agora.',
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     }
   }
 
   Future<void> sendPasswordReset(String email) async {
+    final repo = _ref.read(authRepositoryProvider);
     try {
-      await _ref.read(authRepositoryProvider).sendPasswordReset(email);
+      await repo.sendPasswordReset(email);
     } catch (_) {
-      state = AuthState.error('Falha ao enviar recuperacao de senha.');
+      state = AuthState.error(
+        'Falha ao enviar recuperacao de senha.',
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     }
   }
 
   Future<void> signInWithGoogle() async {
+    final repo = _ref.read(authRepositoryProvider);
     try {
-      await _ref.read(authRepositoryProvider).signInWithGoogle();
+      await repo.signInWithGoogle();
     } catch (_) {
-      state = AuthState.error('Falha no login com Google.');
+      state = AuthState.error(
+        'Falha no login com Google.',
+        isUsingSupabase: repo.isUsingSupabase,
+      );
     }
   }
 
   Future<void> signOut() async {
-    await _ref.read(authRepositoryProvider).signOut();
-    state = const AuthState.unauthenticated();
+    final repo = _ref.read(authRepositoryProvider);
+    await repo.signOut();
+    state = AuthState(
+      status: AuthStatus.unauthenticated,
+      isUsingSupabase: repo.isUsingSupabase,
+    );
   }
 
   @override

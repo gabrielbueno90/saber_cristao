@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
+import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
 
 class StoreScreen extends ConsumerWidget {
@@ -25,19 +26,28 @@ class StoreScreen extends ConsumerWidget {
           _CreditPackCard(
             title: '10 créditos',
             subtitle: 'Ideal para continuar fases e recuperar vidas.',
-            onTap: () => ref.read(creditsControllerProvider.notifier).addCredits(10),
+            onTap: () {
+              ref.read(creditsControllerProvider.notifier).addCredits(10);
+              ref.read(progressControllerProvider.notifier).syncToRemote();
+            },
           ),
           AppSpacing.v16,
           _CreditPackCard(
             title: '50 créditos',
             subtitle: 'Perfeito para comprar dicas e segunda chance.',
-            onTap: () => ref.read(creditsControllerProvider.notifier).addCredits(50),
+            onTap: () {
+              ref.read(creditsControllerProvider.notifier).addCredits(50);
+              ref.read(progressControllerProvider.notifier).syncToRemote();
+            },
           ),
           AppSpacing.v16,
           _CreditPackCard(
             title: '150 créditos',
             subtitle: 'Pacote avançado para evoluir mais rápido.',
-            onTap: () => ref.read(creditsControllerProvider.notifier).addCredits(150),
+            onTap: () {
+              ref.read(creditsControllerProvider.notifier).addCredits(150);
+              ref.read(progressControllerProvider.notifier).syncToRemote();
+            },
           ),
           AppSpacing.v24,
           const Text('Os créditos podem ser usados para continuar fases, comprar dicas, recuperar vidas e segunda chance.'),

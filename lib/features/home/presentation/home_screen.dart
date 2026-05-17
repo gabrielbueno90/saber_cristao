@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
@@ -8,11 +9,24 @@ import 'package:saber_cristao/features/lives/presentation/lives_controller.dart'
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(() {
+      ref.read(progressControllerProvider.notifier).loadForCurrentUser();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final lives = ref.watch(livesControllerProvider);
     final credits = ref.watch(creditsControllerProvider);
@@ -34,6 +48,17 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            if (kDebugMode) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Chip(
+                  label: Text(
+                    auth.isUsingSupabase ? 'Supabase conectado' : 'Modo mock',
+                  ),
+                ),
+              ),
+              AppSpacing.v12,
+            ],
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),

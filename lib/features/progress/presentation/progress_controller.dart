@@ -1,5 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
+import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
+import 'package:saber_cristao/features/progress/data/progress_repository.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
+import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
 
 class ProgressState {
   const ProgressState({
@@ -42,6 +46,36 @@ class ProgressController extends StateNotifier<ProgressState> {
 
   final Ref _ref;
 
+  Future<void> loadForCurrentUser() async {
+    final auth = _ref.read(authControllerProvider);
+    if (auth.status != AuthStatus.authenticated || auth.user == null) return;
+
+    final remote = await _ref.read(progressRepositoryProvider).fetchMyProgress(
+          auth.user!.id,
+        );
+    if (remote == null) {
+      await syncToRemote();
+      return;
+    }
+
+    final merged = ProgressState(
+      currentLevel: remote.progress.currentLevel > state.currentLevel
+          ? remote.progress.currentLevel
+          : state.currentLevel,
+      totalStars: remote.progress.totalStars > state.totalStars
+          ? remote.progress.totalStars
+          : state.totalStars,
+      totalScore: remote.progress.totalScore > state.totalScore
+          ? remote.progress.totalScore
+          : state.totalScore,
+      lastSyncAt: DateTime.now(),
+    );
+    state = merged;
+    await _ref.read(livesControllerProvider.notifier).setLives(remote.lives);
+    await _ref.read(creditsControllerProvider.notifier).setCredits(remote.credits);
+    await syncToRemote();
+  }
+
   Future<void> applyQuizResult({
     required int stars,
     required int score,
@@ -51,8 +85,25 @@ class ProgressController extends StateNotifier<ProgressState> {
       totalStars: state.totalStars + stars,
       totalScore: state.totalScore + score,
       currentLevel: completed ? state.currentLevel + 1 : state.currentLevel,
+      lastSyncAt: DateTime.now(),
     );
     await _ref.read(localStorageProvider).saveStars(state.totalStars);
+    await syncToRemote();
+  }
+
+  Future<void> syncToRemote() async {
+    final auth = _ref.read(authControllerProvider);
+    if (auth.status != AuthStatus.authenticated || auth.user == null) return;
+
+    final lives = _ref.read(livesControllerProvider);
+    final credits = _ref.read(creditsControllerProvider);
+    await _ref.read(progressRepositoryProvider).upsertMyProgress(
+          userId: auth.user!.id,
+          state: state,
+          lives: lives,
+          maxLives: 5,
+          credits: credits,
+        );
   }
 }
 

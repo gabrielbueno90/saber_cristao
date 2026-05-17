@@ -1,42 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
+import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
+import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
+import 'package:saber_cristao/features/quiz/data/quiz_repository.dart';
 import 'package:saber_cristao/features/quiz/domain/question_model.dart';
 import 'package:saber_cristao/features/quiz/domain/quiz_result_model.dart';
 import 'package:saber_cristao/features/quiz/domain/quiz_session_model.dart';
 
-final mockQuestionsProvider = Provider<List<QuestionModel>>((_) {
-  return const [
-    QuestionModel(
-      id: 'q1',
-      level: 1,
-      question: 'Quem construiu a arca?',
-      options: ['Abraao', 'Noe', 'Moises', 'Davi'],
-      correctIndex: 1,
-      explanation: 'Noe construiu a arca por obediencia a Deus.',
-      bibleReference: 'Genesis 6:14',
-    ),
-    QuestionModel(
-      id: 'q2',
-      level: 1,
-      question: 'Qual evangelho comeca com "No principio era o Verbo"?',
-      options: ['Mateus', 'Marcos', 'Lucas', 'Joao'],
-      correctIndex: 3,
-      explanation: 'Essa abertura esta no evangelho de Joao.',
-      bibleReference: 'Joao 1:1',
-    ),
-    QuestionModel(
-      id: 'q3',
-      level: 1,
-      question: 'Quantos livros tem o Novo Testamento?',
-      options: ['27', '39', '66', '12'],
-      correctIndex: 0,
-      explanation: 'O Novo Testamento possui 27 livros.',
-      bibleReference: 'Canon biblico',
-    ),
-  ];
-});
-
 class QuizController extends StateNotifier<QuizSessionModel> {
-  QuizController(this._questions)
+  QuizController(this._ref)
       : super(
           const QuizSessionModel(
             level: 1,
@@ -45,14 +17,51 @@ class QuizController extends StateNotifier<QuizSessionModel> {
             wrongCount: 0,
             score: 0,
           ),
-        );
+        ) {
+    _loadQuestions();
+  }
 
-  final List<QuestionModel> _questions;
+  final Ref _ref;
+  List<QuestionModel> _questions = const [];
   QuizResultModel? _lastResult;
+  bool _questionsFromSupabase = false;
+  String? _loadWarning;
+  bool _attemptRecorded = false;
 
+  bool get hasQuestions => _questions.isNotEmpty;
+  bool get questionsFromSupabase => _questionsFromSupabase;
+  String? get loadWarning => _loadWarning;
   QuestionModel get currentQuestion => _questions[state.index];
   bool get isLastQuestion => state.index >= _questions.length - 1;
   QuizResultModel? get lastResult => _lastResult;
+
+  Future<void> _loadQuestions() async {
+    final level = _ref.read(progressControllerProvider).currentLevel;
+    final repo = _ref.read(quizRepositoryProvider);
+    try {
+      final fetched = await repo.fetchQuestions(
+            level: level,
+            language: 'pt-BR',
+            limit: 5,
+          );
+      _questions = fetched;
+      _questionsFromSupabase = repo.isUsingSupabase && fetched.isNotEmpty;
+      _loadWarning = fetched.isEmpty
+          ? 'Sem perguntas no Supabase para este nível. Usando fallback mock.'
+          : null;
+    } catch (_) {
+      _questions = const [];
+      _questionsFromSupabase = false;
+      _loadWarning = 'Falha ao carregar perguntas do Supabase. Usando fallback mock.';
+    }
+    if (_questions.isEmpty) {
+      _questions = await const MockQuizRepository().fetchQuestions(
+          level: level, language: 'pt-BR');
+      _questionsFromSupabase = false;
+    }
+    _attemptRecorded = false;
+    state = state.copyWith(level: level, index: 0, score: 0, correctCount: 0, wrongCount: 0);
+  }
 
   QuizResultModel evaluateAnswer(int index) {
     final isCorrect = currentQuestion.correctIndex == index;
@@ -96,16 +105,31 @@ class QuizController extends StateNotifier<QuizSessionModel> {
 
   void restart() {
     _lastResult = null;
+    _loadWarning = null;
     state = state.copyWith(
       index: 0,
       score: 0,
       correctCount: 0,
       wrongCount: 0,
     );
+    _loadQuestions();
+  }
+
+  Future<void> recordAttempt(QuizResultModel result) async {
+    if (_attemptRecorded) return;
+    final auth = _ref.read(authControllerProvider);
+    if (auth.status != AuthStatus.authenticated || auth.user == null) return;
+    await _ref.read(quizRepositoryProvider).insertAttempt(
+          userId: auth.user!.id,
+          result: result,
+          completed: true,
+          usedContinue: false,
+        );
+    _attemptRecorded = true;
   }
 }
 
 final quizControllerProvider =
     StateNotifierProvider<QuizController, QuizSessionModel>((ref) {
-  return QuizController(ref.watch(mockQuestionsProvider));
+  return QuizController(ref);
 });

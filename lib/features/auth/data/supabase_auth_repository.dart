@@ -12,6 +12,9 @@ class SupabaseAuthRepository implements AuthRepository {
   final SupabaseClient? _client;
 
   @override
+  bool get isUsingSupabase => true;
+
+  @override
   Stream<domain.AuthUser?> authStateChanges() {
     if (_client == null) return Stream.value(null);
     return _client.auth.onAuthStateChange.map((event) {
@@ -108,6 +111,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 class MockAuthRepository implements AuthRepository {
   final _controller = StreamController<domain.AuthUser?>.broadcast();
   domain.AuthUser? _user;
+
+  @override
+  bool get isUsingSupabase => false;
 
   @override
   Stream<domain.AuthUser?> authStateChanges() => _controller.stream;

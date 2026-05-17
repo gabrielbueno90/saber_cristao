@@ -1,6 +1,7 @@
 import 'package:saber_cristao/features/auth/domain/auth_user.dart';
 
 abstract class AuthRepository {
+  bool get isUsingSupabase;
   Stream<AuthUser?> authStateChanges();
   Future<AuthUser?> currentUser();
   Future<void> signInWithEmail({

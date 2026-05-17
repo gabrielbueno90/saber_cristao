@@ -21,6 +21,11 @@ class LivesController extends StateNotifier<int> {
     state = (state + amount).clamp(0, 99);
     await _storage.saveLives(state);
   }
+
+  Future<void> setLives(int value) async {
+    state = value.clamp(0, 99);
+    await _storage.saveLives(state);
+  }
 }
 
 final localStorageProvider = Provider<LocalStorageService>((_) {

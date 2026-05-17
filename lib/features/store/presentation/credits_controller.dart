@@ -14,15 +14,25 @@ class CreditsController extends StateNotifier<int> {
   }
 
   Future<void> addCredits(int amount) async {
+    // Security note: in production, credit increase must be validated server-side
+    // (backend/Edge Function) after rewarded ad or in-app purchase verification.
+    // Current client-side mutation is temporary for dev.
     state += amount;
     await _ref.read(localStorageProvider).saveCredits(state);
   }
 
   Future<bool> consumeCredit([int amount = 1]) async {
     if (state < amount) return false;
+    // Security note: in production, secure credit spending must be validated
+    // server-side (backend/Edge Function). Current client-side mutation is temporary for dev.
     state -= amount;
     await _ref.read(localStorageProvider).saveCredits(state);
     return true;
+  }
+
+  Future<void> setCredits(int value) async {
+    state = value.clamp(0, 999999);
+    await _ref.read(localStorageProvider).saveCredits(state);
   }
 }
 

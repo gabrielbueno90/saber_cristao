@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
@@ -18,6 +19,7 @@ class QuizScreen extends ConsumerStatefulWidget {
 class _QuizScreenState extends ConsumerState<QuizScreen> {
   int? _selectedIndex;
   QuizResultModel? _pendingResult;
+  bool _submittingResult = false;
 
   Future<bool> _confirmExit() async {
     final leave = await showDialog<bool>(
@@ -56,6 +58,11 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     final session = ref.watch(quizControllerProvider);
     final controller = ref.read(quizControllerProvider.notifier);
     final lives = ref.watch(livesControllerProvider);
+    if (!controller.hasQuestions) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     final question = controller.currentQuestion;
 
     if (lives <= 0) {
@@ -94,6 +101,25 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
               ),
             ),
             AppSpacing.v16,
+            if (kDebugMode && controller.loadWarning != null) ...[
+              Text(
+                controller.loadWarning!,
+                style: const TextStyle(color: AppTheme.error),
+              ),
+              AppSpacing.v12,
+            ],
+            if (kDebugMode) ...[
+              Text(
+                controller.questionsFromSupabase
+                    ? 'Perguntas: Supabase'
+                    : 'Perguntas: mock',
+                style: const TextStyle(
+                  color: AppTheme.textMuted,
+                  fontSize: 12,
+                ),
+              ),
+              AppSpacing.v12,
+            ],
             ...List.generate(question.options.length, (index) {
               final selected = _selectedIndex == index;
               final answered = _selectedIndex != null;
@@ -113,6 +139,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                           final result = controller.evaluateAnswer(index);
                           if (index != question.correctIndex) {
                             await ref.read(livesControllerProvider.notifier).loseLife();
+                            await ref.read(progressControllerProvider.notifier).syncToRemote();
                             final newLives = ref.read(livesControllerProvider);
                             if (!context.mounted) return;
                             if (newLives <= 0) {
@@ -155,7 +182,10 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
               ),
               AppSpacing.v12,
               ElevatedButton(
-                onPressed: () async {
+                onPressed: _submittingResult
+                    ? null
+                    : () async {
+                        setState(() => _submittingResult = true);
                   final result = _pendingResult!;
                   final wasLast = controller.isLastQuestion;
                   controller.advanceWithResult(result);
@@ -165,6 +195,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                           score: result.score,
                           completed: true,
                         );
+                    await controller.recordAttempt(result);
                     if (!context.mounted) return;
                     context.go('/result', extra: result);
                     return;
@@ -172,6 +203,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                   setState(() {
                     _selectedIndex = null;
                     _pendingResult = null;
+                    _submittingResult = false;
                   });
                 },
                 child: Text(controller.isLastQuestion ? 'Ver resultado' : 'Próxima pergunta'),
