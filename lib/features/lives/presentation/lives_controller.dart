@@ -28,10 +28,6 @@ class LivesController extends StateNotifier<int> {
   }
 }
 
-final localStorageProvider = Provider<LocalStorageService>((_) {
-  return LocalStorageService();
-});
-
 final livesControllerProvider = StateNotifierProvider<LivesController, int>(
   (ref) => LivesController(ref.watch(localStorageProvider)),
 );

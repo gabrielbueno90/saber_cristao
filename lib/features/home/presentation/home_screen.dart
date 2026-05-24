@@ -3,7 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/ads/banner_ad_widget.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
+import 'package:saber_cristao/core/monetization/ad_placement.dart';
+import 'package:saber_cristao/core/monetization/monetization_provider.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
@@ -31,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final lives = ref.watch(livesControllerProvider);
     final credits = ref.watch(creditsControllerProvider);
     final progress = ref.watch(progressControllerProvider);
+    final monetization = ref.watch(monetizationControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -49,13 +53,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: ListView(
           children: [
             if (kDebugMode) ...[
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Chip(
-                  label: Text(
-                    auth.isUsingSupabase ? 'Supabase conectado' : 'Modo mock',
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  Chip(
+                    label: Text(
+                      auth.isUsingSupabase ? 'Supabase conectado' : 'Modo mock',
+                    ),
                   ),
-                ),
+                  Chip(
+                    label: Text('Progresso: ${progress.sourceLabel}'),
+                  ),
+                  Chip(
+                    label: Text('Ads: ${monetization.adModeLabel}'),
+                  ),
+                ],
               ),
               AppSpacing.v12,
             ],
@@ -69,10 +82,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               padding: const EdgeInsets.all(18),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Saber Cristão',
                     style: TextStyle(
                       color: AppTheme.softGold,
@@ -81,10 +94,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   SizedBox(height: 12),
-                  Text(
+                  const Text(
                     'Aprenda a Bíblia, avance por desafios e fortaleça sua fé.',
                     style: TextStyle(color: AppTheme.cream),
                   ),
+                  if (monetization.isPremium) ...[
+                    AppSpacing.v12,
+                    const Chip(
+                      label: Text('Premium ativo'),
+                      backgroundColor: AppTheme.softGold,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -132,26 +152,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Cristão Premium',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                    ),
-                    AppSpacing.v8,
-                    const Text('Jogue sem anúncios e receba benefícios diários.'),
-                    AppSpacing.v16,
-                    ElevatedButton(
-                      onPressed: () => context.push('/paywall'),
-                      child: const Text('Conhecer Premium'),
-                    ),
+                    if (!monetization.isPremium) ...[
+                      const Text(
+                        'Cristão Premium',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                      AppSpacing.v8,
+                      const Text('Jogue sem anúncios e receba benefícios diários.'),
+                      AppSpacing.v16,
+                      ElevatedButton(
+                        onPressed: () => context.push('/paywall'),
+                        child: const Text('Conhecer Premium'),
+                      ),
+                    ] else ...[
+                      const Text(
+                        'Seu plano Premium está ativo',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                      AppSpacing.v8,
+                      const Text('Você joga sem anúncios e com uma experiência mais limpa.'),
+                    ],
                   ],
                 ),
               ),
             ),
+            if (kDebugMode) ...[
+              AppSpacing.v12,
+              OutlinedButton(
+                onPressed: () => ref
+                    .read(monetizationControllerProvider.notifier)
+                    .setPremiumDevOnly(!monetization.isPremium),
+                child: Text(
+                  monetization.isPremium
+                      ? 'Desativar Premium (dev)'
+                      : 'Simular Premium (dev)',
+                ),
+              ),
+            ],
             AppSpacing.v12,
             TextButton(
               onPressed: () => context.push('/profile'),
               child: const Text('Abrir perfil'),
-            )
+            ),
+            AppSpacing.v16,
+            const MonetizedBannerSlot(placement: AdPlacement.home),
           ],
         ),
       ),

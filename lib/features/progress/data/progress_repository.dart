@@ -52,6 +52,7 @@ class SupabaseProgressRepository implements ProgressRepository {
         lastSyncAt: row['last_sync_at'] == null
             ? null
             : DateTime.tryParse(row['last_sync_at'] as String),
+        sourceLabel: 'Remoto',
       ),
       lives: (row['lives'] as num?)?.toInt() ?? 5,
       maxLives: (row['max_lives'] as num?)?.toInt() ?? 5,

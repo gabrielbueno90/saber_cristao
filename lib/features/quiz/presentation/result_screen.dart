@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
+import 'package:saber_cristao/core/monetization/ad_placement.dart';
+import 'package:saber_cristao/core/monetization/monetization_provider.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 import 'package:saber_cristao/features/quiz/domain/quiz_result_model.dart';
 import 'package:saber_cristao/features/quiz/presentation/quiz_controller.dart';
@@ -49,7 +51,11 @@ class ResultScreen extends ConsumerWidget {
                 ),
                 AppSpacing.v16,
                 OutlinedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await ref
+                        .read(monetizationControllerProvider.notifier)
+                        .showInterstitialIfAllowed(AdPlacement.result);
+                    if (!context.mounted) return;
                     ref.read(quizControllerProvider.notifier).restart();
                     context.go('/levels');
                   },
@@ -57,7 +63,11 @@ class ResultScreen extends ConsumerWidget {
                 ),
                 AppSpacing.v12,
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await ref
+                        .read(monetizationControllerProvider.notifier)
+                        .showInterstitialIfAllowed(AdPlacement.result);
+                    if (!context.mounted) return;
                     ref.read(quizControllerProvider.notifier).restart();
                     context.go('/home');
                   },

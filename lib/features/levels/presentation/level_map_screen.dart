@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/ads/banner_ad_widget.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
+import 'package:saber_cristao/core/monetization/ad_placement.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 
 class LevelMapScreen extends ConsumerWidget {
@@ -106,6 +108,8 @@ class LevelMapScreen extends ConsumerWidget {
               onPressed: () => context.go('/home'),
               child: const Text('Voltar para início'),
             ),
+            AppSpacing.v12,
+            const MonetizedBannerSlot(placement: AdPlacement.levelMap),
           ],
         ),
       ),

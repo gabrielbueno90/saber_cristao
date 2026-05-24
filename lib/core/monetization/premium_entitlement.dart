@@ -1,0 +1,4 @@
+enum PremiumEntitlement {
+  free,
+  premium,
+}

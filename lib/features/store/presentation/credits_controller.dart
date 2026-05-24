@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
+import 'package:saber_cristao/features/store/data/credits_repository.dart';
 
 class CreditsController extends StateNotifier<int> {
   CreditsController(this._ref) : super(10) {
@@ -9,30 +9,25 @@ class CreditsController extends StateNotifier<int> {
   final Ref _ref;
 
   Future<void> _load() async {
-    final storage = _ref.read(localStorageProvider);
-    state = await storage.getCredits();
+    state = await _ref.read(creditsRepositoryProvider).loadCredits();
   }
 
-  Future<void> addCredits(int amount) async {
-    // Security note: in production, credit increase must be validated server-side
-    // (backend/Edge Function) after rewarded ad or in-app purchase verification.
-    // Current client-side mutation is temporary for dev.
-    state += amount;
-    await _ref.read(localStorageProvider).saveCredits(state);
+  Future<void> addCreditsDevOnly(int amount) async {
+    state = await _ref
+        .read(creditsRepositoryProvider)
+        .addCreditsDevOnly(state, amount);
   }
 
-  Future<bool> consumeCredit([int amount = 1]) async {
-    if (state < amount) return false;
-    // Security note: in production, secure credit spending must be validated
-    // server-side (backend/Edge Function). Current client-side mutation is temporary for dev.
-    state -= amount;
-    await _ref.read(localStorageProvider).saveCredits(state);
+  Future<bool> spendCredits([int amount = 1]) async {
+    final nextValue =
+        await _ref.read(creditsRepositoryProvider).spendCredits(state, amount);
+    if (nextValue == null) return false;
+    state = nextValue;
     return true;
   }
 
   Future<void> setCredits(int value) async {
-    state = value.clamp(0, 999999);
-    await _ref.read(localStorageProvider).saveCredits(state);
+    state = await _ref.read(creditsRepositoryProvider).setCredits(value);
   }
 }
 
