@@ -10,30 +10,42 @@
 Os IDs precisam bater exatamente com o que for criado na loja.
 
 ## Google Play Console
-Criar:
-- assinatura `premium_monthly`
-- assinatura `premium_yearly`
-- consumivel `credits_10`
-- consumivel `credits_50`
-- consumivel `credits_150`
+Passo a passo pratico:
 
-Tambem configurar:
-- `Internal testing` ou `Closed testing`
-- `License testers`
-- app com assinatura e faturamento habilitados
+1. Criar o app na Play Console.
+2. Usar o package name Android `com.sabercristao.app`.
+3. Configurar informacoes basicas do app.
+4. Criar uma trilha em `Internal testing`.
+5. Adicionar testadores em `License testers`.
+6. Subir um build assinado para teste interno.
+7. Criar os produtos consumiveis:
+   - `credits_10`
+   - `credits_50`
+   - `credits_150`
+8. Criar as assinaturas:
+   - `premium_monthly`
+   - `premium_yearly`
+9. Ativar precos, regioes e status dos produtos.
+10. Instalar o app pelo link de teste interno.
+11. Testar compras com uma conta incluida como tester.
 
 ## App Store Connect
-Criar:
-- auto-renewable subscription `premium_monthly`
-- auto-renewable subscription `premium_yearly`
-- consumable `credits_10`
-- consumable `credits_50`
-- consumable `credits_150`
+Passo a passo pratico:
 
-Tambem configurar:
-- `Sandbox tester`
-- grupo de subscriptions
-- `Restore purchases` testado em device iOS
+1. Criar Bundle ID no Apple Developer.
+2. Criar o app no App Store Connect com o Bundle ID iOS definitivo.
+3. Criar um grupo de assinaturas.
+4. Criar as assinaturas auto-renewable:
+   - `premium_monthly`
+   - `premium_yearly`
+5. Criar os consumiveis:
+   - `credits_10`
+   - `credits_50`
+   - `credits_150`
+6. Criar sandbox tester.
+7. Configurar acordos, impostos e dados bancarios quando exigido.
+8. Testar em device iOS com sandbox/TestFlight.
+9. Testar `Restore purchases`.
 
 ## Observacoes de teste
 - `in_app_purchase` real nao e testado no Chrome
@@ -46,3 +58,15 @@ Tambem configurar:
 - subir build interna
 - vincular testadores
 - implementar a validacao segura via backend/Edge Function
+
+## Comportamento atual no app
+
+- Chrome: usa fallback/mock.
+- Android/iOS com loja disponivel: tenta carregar produtos reais.
+- Produtos nao encontrados: mostra mensagem amigavel e usa fallback visual.
+- Compra enviada: retorna estado `pending` enquanto a loja processa.
+- Compra concluida/restaurada em debug: aplica fluxo dev temporario.
+
+Antes da publicacao, compras precisam ser validadas pela Edge Function
+`validate_purchase` e os beneficios nao devem ser concedidos diretamente pelo
+client Flutter.

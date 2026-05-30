@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saber_cristao/core/monetization/ad_placement.dart';
@@ -25,12 +27,16 @@ class MonetizationController extends StateNotifier<MonetizationState> {
   final Ref _ref;
   final MonetizationService _service;
   List<PurchaseProduct> _cachedProducts = const [];
+  StreamSubscription<PurchaseResult>? _purchaseSubscription;
 
   List<PurchaseProduct> get products => _cachedProducts;
 
   Future<void> initialize() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     await _service.initialize();
+    _purchaseSubscription ??= _service.purchaseService.purchaseUpdates.listen(
+      _handlePurchaseUpdate,
+    );
     await refreshPremiumStatus();
     _cachedProducts = await _service.loadProducts();
     state = state.copyWith(
@@ -143,26 +149,7 @@ class MonetizationController extends StateNotifier<MonetizationState> {
     final result = await _service.buyProduct(productId);
 
     if (result.status == PurchaseStatusState.purchased && kDebugMode) {
-      await _ref.read(purchasesRepositoryProvider).applyPurchaseDevOnly(
-            productId: productId,
-            purchaseType: ProductIds.subscriptions.contains(productId)
-                ? 'subscription'
-                : 'consumable',
-          );
-      if (productId == ProductIds.premiumMonthly ||
-          productId == ProductIds.premiumYearly) {
-        await setPremiumDevOnly(true);
-      }
-      if (productId == ProductIds.credits10) {
-        await _ref.read(creditsControllerProvider.notifier).addCreditsDevOnly(10);
-      }
-      if (productId == ProductIds.credits50) {
-        await _ref.read(creditsControllerProvider.notifier).addCreditsDevOnly(50);
-      }
-      if (productId == ProductIds.credits150) {
-        await _ref.read(creditsControllerProvider.notifier).addCreditsDevOnly(150);
-      }
-      await _ref.read(progressControllerProvider.notifier).syncToRemote();
+      await _applyDevPurchaseResult(productId);
     }
 
     state = state.copyWith(
@@ -172,6 +159,49 @@ class MonetizationController extends StateNotifier<MonetizationState> {
           : null,
     );
     return result;
+  }
+
+  Future<void> _handlePurchaseUpdate(PurchaseResult result) async {
+    if (result.status == PurchaseStatusState.pending) {
+      state = state.copyWith(isLoading: true, errorMessage: null);
+      return;
+    }
+
+    if ((result.status == PurchaseStatusState.purchased ||
+            result.status == PurchaseStatusState.restored) &&
+        kDebugMode) {
+      await _applyDevPurchaseResult(result.productId);
+    }
+
+    state = state.copyWith(
+      isLoading: false,
+      errorMessage: result.status == PurchaseStatusState.error
+          ? result.message
+          : null,
+    );
+  }
+
+  Future<void> _applyDevPurchaseResult(String productId) async {
+    await _ref.read(purchasesRepositoryProvider).applyPurchaseDevOnly(
+          productId: productId,
+          purchaseType: ProductIds.subscriptions.contains(productId)
+              ? 'subscription'
+              : 'consumable',
+        );
+    if (productId == ProductIds.premiumMonthly ||
+        productId == ProductIds.premiumYearly) {
+      await setPremiumDevOnly(true);
+    }
+    if (productId == ProductIds.credits10) {
+      await _ref.read(creditsControllerProvider.notifier).addCreditsDevOnly(10);
+    }
+    if (productId == ProductIds.credits50) {
+      await _ref.read(creditsControllerProvider.notifier).addCreditsDevOnly(50);
+    }
+    if (productId == ProductIds.credits150) {
+      await _ref.read(creditsControllerProvider.notifier).addCreditsDevOnly(150);
+    }
+    await _ref.read(progressControllerProvider.notifier).syncToRemote();
   }
 
   Future<PurchaseResult> restorePurchases() async {
@@ -184,5 +214,11 @@ class MonetizationController extends StateNotifier<MonetizationState> {
           : null,
     );
     return result;
+  }
+
+  @override
+  void dispose() {
+    _purchaseSubscription?.cancel();
+    super.dispose();
   }
 }

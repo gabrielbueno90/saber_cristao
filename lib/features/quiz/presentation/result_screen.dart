@@ -17,6 +17,7 @@ class ResultScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressControllerProvider);
+    final completed = result.stars > 0;
     return Scaffold(
       appBar: AppBar(title: const Text('Resultado')),
       body: Padding(
@@ -46,7 +47,9 @@ class ResultScreen extends ConsumerWidget {
                 Text('Erros: ${result.wrongCount}'),
                 AppSpacing.v24,
                 Text(
-                  'Você avançou para o nível ${progress.currentLevel}. Continue sua jornada.',
+                  completed
+                      ? 'Você avançou para o nível ${progress.currentLevel}. Continue sua jornada.'
+                      : 'Você ainda não passou desta fase. Tente novamente para avançar.',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 AppSpacing.v16,

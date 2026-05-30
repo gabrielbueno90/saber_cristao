@@ -77,7 +77,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/quiz',
-        builder: (_, state) => const QuizScreen(),
+        builder: (_, state) {
+          final level = int.tryParse(state.uri.queryParameters['level'] ?? '');
+          return QuizScreen(initialLevel: level);
+        },
       ),
       GoRoute(
         path: '/result',

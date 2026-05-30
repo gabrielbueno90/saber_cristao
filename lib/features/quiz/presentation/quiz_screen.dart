@@ -10,7 +10,9 @@ import 'package:saber_cristao/features/quiz/domain/quiz_result_model.dart';
 import 'package:saber_cristao/features/quiz/presentation/quiz_controller.dart';
 
 class QuizScreen extends ConsumerStatefulWidget {
-  const QuizScreen({super.key});
+  const QuizScreen({super.key, this.initialLevel});
+
+  final int? initialLevel;
 
   @override
   ConsumerState<QuizScreen> createState() => _QuizScreenState();
@@ -20,6 +22,16 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
   int? _selectedIndex;
   QuizResultModel? _pendingResult;
   bool _submittingResult = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialLevel != null) {
+      Future<void>.microtask(
+        () => ref.read(quizControllerProvider.notifier).loadLevel(widget.initialLevel!),
+      );
+    }
+  }
 
   Future<bool> _confirmExit() async {
     final leave = await showDialog<bool>(
@@ -111,7 +123,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             if (kDebugMode) ...[
               Text(
                 controller.questionsFromSupabase
-                    ? 'Perguntas: Supabase'
+                    ? 'Perguntas: Supabase | dificuldade ${controller.expectedDifficulty} | ${controller.expectedQuestionCount} perguntas'
                     : 'Perguntas: mock',
                 style: const TextStyle(
                   color: AppTheme.textMuted,
@@ -191,9 +203,10 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                   controller.advanceWithResult(result);
                   if (wasLast) {
                     await ref.read(progressControllerProvider.notifier).applyQuizResult(
+                          level: result.level,
                           stars: result.stars,
                           score: result.score,
-                          completed: true,
+                          completed: result.stars > 0,
                         );
                     await controller.recordAttempt(result);
                     if (!context.mounted) return;

@@ -132,7 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             AppSpacing.v24,
             ElevatedButton(
-              onPressed: () => context.push('/quiz'),
+              onPressed: () => context.push('/quiz?level=${progress.currentLevel}'),
               child: const Text('Começar desafio'),
             ),
             AppSpacing.v12,

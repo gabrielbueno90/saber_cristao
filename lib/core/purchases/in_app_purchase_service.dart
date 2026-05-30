@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -11,6 +13,9 @@ class InAppPurchaseService implements PurchaseService {
   InAppPurchaseService(this._iap);
 
   final InAppPurchase _iap;
+  final StreamController<PurchaseResult> _purchaseUpdates =
+      StreamController<PurchaseResult>.broadcast();
+  StreamSubscription<List<PurchaseDetails>>? _subscription;
   bool _available = false;
   List<ProductDetails> _products = const [];
 
@@ -18,9 +23,24 @@ class InAppPurchaseService implements PurchaseService {
   String get modeLabel => kIsWeb ? 'Mock (web)' : (_available ? 'Sandbox/teste' : 'Mock fallback');
 
   @override
+  Stream<PurchaseResult> get purchaseUpdates => _purchaseUpdates.stream;
+
+  @override
   Future<void> initialize() async {
     if (kIsWeb) return;
     _available = await _iap.isAvailable();
+    _subscription ??= _iap.purchaseStream.listen(
+      _handlePurchaseUpdates,
+      onError: (Object error) {
+        _purchaseUpdates.add(
+          PurchaseResult(
+            status: PurchaseStatusState.error,
+            productId: 'unknown',
+            message: 'Falha ao receber atualização da loja: $error',
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -30,6 +50,14 @@ class InAppPurchaseService implements PurchaseService {
     }
     final response = await _iap.queryProductDetails(ProductIds.all.toSet());
     if (response.notFoundIDs.isNotEmpty || response.productDetails.isEmpty) {
+      _purchaseUpdates.add(
+        PurchaseResult(
+          status: PurchaseStatusState.error,
+          productId: response.notFoundIDs.join(', '),
+          message:
+              'Produtos nao encontrados na loja. Confira IDs, build interno e testadores.',
+        ),
+      );
       return _mockProducts;
     }
     _products = response.productDetails;
@@ -92,6 +120,52 @@ class InAppPurchaseService implements PurchaseService {
       productId: 'restore',
       message: 'Solicitacao de restore enviada.',
     );
+  }
+
+  Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
+    for (final purchase in purchases) {
+      final result = _mapPurchaseDetails(purchase);
+      _purchaseUpdates.add(result);
+
+      if (purchase.pendingCompletePurchase) {
+        await _iap.completePurchase(purchase);
+      }
+    }
+  }
+
+  PurchaseResult _mapPurchaseDetails(PurchaseDetails purchase) {
+    switch (purchase.status) {
+      case PurchaseStatus.pending:
+        return PurchaseResult(
+          status: PurchaseStatusState.pending,
+          productId: purchase.productID,
+          message: 'Compra pendente na loja.',
+        );
+      case PurchaseStatus.purchased:
+        return PurchaseResult(
+          status: PurchaseStatusState.purchased,
+          productId: purchase.productID,
+          message: 'Compra concluida pela loja.',
+        );
+      case PurchaseStatus.restored:
+        return PurchaseResult(
+          status: PurchaseStatusState.restored,
+          productId: purchase.productID,
+          message: 'Compra restaurada pela loja.',
+        );
+      case PurchaseStatus.canceled:
+        return PurchaseResult(
+          status: PurchaseStatusState.cancelled,
+          productId: purchase.productID,
+          message: 'Compra cancelada.',
+        );
+      case PurchaseStatus.error:
+        return PurchaseResult(
+          status: PurchaseStatusState.error,
+          productId: purchase.productID,
+          message: purchase.error?.message ?? 'Erro na compra.',
+        );
+    }
   }
 }
 

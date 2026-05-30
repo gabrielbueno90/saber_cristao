@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/shared/widgets/brand_mark.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -19,15 +20,25 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              BrandMark(size: 104),
+              SizedBox(height: 16),
               Text(
-                'Saber Cristao',
+                'Saber Cristão',
                 style: TextStyle(
                   color: AppTheme.softGold,
-                  fontSize: 34,
+                  fontSize: 32,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 6),
+              Text(
+                'Estudo bíblico em forma de desafio',
+                style: TextStyle(
+                  color: AppTheme.cream,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 14),
               CircularProgressIndicator(color: AppTheme.softGold),
             ],
           ),

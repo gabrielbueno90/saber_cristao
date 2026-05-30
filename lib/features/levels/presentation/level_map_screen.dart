@@ -13,10 +13,10 @@ class LevelMapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressControllerProvider);
-    final levels = List.generate(12, (index) {
+    final levels = List.generate(15, (index) {
       final level = index + 1;
       final completed = level < progress.currentLevel;
-      final unlocked = level <= progress.currentLevel + 1;
+      final unlocked = level <= progress.currentLevel;
       final stars = completed ? 2 : 0;
       return (level, unlocked, completed, stars);
     });
@@ -61,7 +61,7 @@ class LevelMapScreen extends ConsumerWidget {
                         );
                         return;
                       }
-                      context.push('/quiz');
+                      context.push('/quiz?level=$level');
                     },
                     child: Card(
                       color: unlocked ? AppTheme.parchment : AppTheme.cream,

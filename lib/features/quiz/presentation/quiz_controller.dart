@@ -31,24 +31,29 @@ class QuizController extends StateNotifier<QuizSessionModel> {
   bool get hasQuestions => _questions.isNotEmpty;
   bool get questionsFromSupabase => _questionsFromSupabase;
   String? get loadWarning => _loadWarning;
+  int get expectedDifficulty => _difficultyForLevel(state.level);
+  int get expectedQuestionCount => _questionCountForLevel(state.level);
   QuestionModel get currentQuestion => _questions[state.index];
   bool get isLastQuestion => state.index >= _questions.length - 1;
   QuizResultModel? get lastResult => _lastResult;
 
-  Future<void> _loadQuestions() async {
-    final level = _ref.read(progressControllerProvider).currentLevel;
+  Future<void> loadLevel(int level) => _loadQuestions(levelOverride: level);
+
+  Future<void> _loadQuestions({int? levelOverride}) async {
+    final level = levelOverride ?? _ref.read(progressControllerProvider).currentLevel;
+    final difficulty = _difficultyForLevel(level);
+    final limit = _questionCountForLevel(level);
     final repo = _ref.read(quizRepositoryProvider);
     try {
-      final fetched = await repo.fetchQuestions(
+      final result = await repo.fetchQuestions(
             level: level,
+            difficulty: difficulty,
             language: 'pt-BR',
-            limit: 5,
+            limit: limit,
           );
-      _questions = fetched;
-      _questionsFromSupabase = repo.isUsingSupabase && fetched.isNotEmpty;
-      _loadWarning = fetched.isEmpty
-          ? 'Sem perguntas no Supabase para este nível. Usando fallback mock.'
-          : null;
+      _questions = result.questions;
+      _questionsFromSupabase = repo.isUsingSupabase && result.fromSupabase;
+      _loadWarning = result.warning;
     } catch (_) {
       _questions = const [];
       _questionsFromSupabase = false;
@@ -56,9 +61,14 @@ class QuizController extends StateNotifier<QuizSessionModel> {
     }
     if (_questions.isEmpty) {
       _questions = await const MockQuizRepository().fetchQuestions(
-          level: level, language: 'pt-BR');
+        level: level,
+        difficulty: difficulty,
+        language: 'pt-BR',
+        limit: limit,
+      ).then((result) => result.questions);
       _questionsFromSupabase = false;
     }
+    _questions.shuffle();
     _attemptRecorded = false;
     state = state.copyWith(level: level, index: 0, score: 0, correctCount: 0, wrongCount: 0);
   }
@@ -101,6 +111,18 @@ class QuizController extends StateNotifier<QuizSessionModel> {
     if (wrong <= 1) return 2;
     if (correct > 0) return 1;
     return 0;
+  }
+
+  int _difficultyForLevel(int level) {
+    if (level <= 5) return 1;
+    if (level <= 10) return 2;
+    return 3;
+  }
+
+  int _questionCountForLevel(int level) {
+    if (level <= 5) return 5;
+    if (level <= 10) return 7;
+    return 10;
   }
 
   void restart() {

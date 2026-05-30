@@ -85,14 +85,18 @@ class ProgressController extends StateNotifier<ProgressState> {
   }
 
   Future<void> applyQuizResult({
+    required int level,
     required int stars,
     required int score,
     required bool completed,
   }) async {
+    final nextLevel = completed && state.currentLevel <= level
+        ? level + 1
+        : state.currentLevel;
     state = state.copyWith(
       totalStars: state.totalStars + stars,
       totalScore: state.totalScore + score,
-      currentLevel: completed ? state.currentLevel + 1 : state.currentLevel,
+      currentLevel: nextLevel,
       lastSyncAt: DateTime.now(),
       sourceLabel: state.sourceLabel,
     );
