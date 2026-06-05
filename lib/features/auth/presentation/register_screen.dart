@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -65,35 +66,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               decoration: const InputDecoration(labelText: 'Confirmar senha'),
             ),
             AppSpacing.v24,
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (passwordController.text != confirmController.text) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Senhas nao conferem')),
+            AppPrimaryButton(
+              label: 'Criar conta',
+              onPressed: () async {
+                if (passwordController.text != confirmController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Senhas nao conferem')),
+                  );
+                  return;
+                }
+                await ref.read(authControllerProvider.notifier).register(
+                      name: nameController.text.trim(),
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
                     );
-                    return;
-                  }
-                  await ref.read(authControllerProvider.notifier).register(
-                        name: nameController.text.trim(),
-                        email: emailController.text.trim(),
-                        password: passwordController.text.trim(),
-                      );
-                  if (context.mounted) context.go('/home');
-                },
-                child: const Text('Criar conta'),
-              ),
+                if (context.mounted) context.go('/home');
+              },
             ),
             AppSpacing.v12,
-            OutlinedButton(
+            AppSecondaryButton(
+              label: 'Entrar com Google',
               onPressed: () => ref.read(authControllerProvider.notifier).signInWithGoogle(),
-              child: const Text('Entrar com Google'),
             ),
             AppSpacing.v12,
-            TextButton(
+            AppOutlineButton(
+              label: 'Já tenho conta',
               onPressed: () => context.go('/login'),
-              child: const Text('Já tenho conta'),
             ),
           ],
         ),

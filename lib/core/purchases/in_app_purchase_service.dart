@@ -28,19 +28,30 @@ class InAppPurchaseService implements PurchaseService {
   @override
   Future<void> initialize() async {
     if (kIsWeb) return;
-    _available = await _iap.isAvailable();
-    _subscription ??= _iap.purchaseStream.listen(
-      _handlePurchaseUpdates,
-      onError: (Object error) {
-        _purchaseUpdates.add(
-          PurchaseResult(
-            status: PurchaseStatusState.error,
-            productId: 'unknown',
-            message: 'Falha ao receber atualização da loja: $error',
-          ),
-        );
-      },
-    );
+    try {
+      _available = await _iap.isAvailable();
+      _subscription ??= _iap.purchaseStream.listen(
+        _handlePurchaseUpdates,
+        onError: (Object error) {
+          _purchaseUpdates.add(
+            PurchaseResult(
+              status: PurchaseStatusState.error,
+              productId: 'unknown',
+              message: 'Falha ao receber atualização da loja: $error',
+            ),
+          );
+        },
+      );
+    } catch (error) {
+      _available = false;
+      _purchaseUpdates.add(
+        PurchaseResult(
+          status: PurchaseStatusState.error,
+          productId: 'unknown',
+          message: 'Falha ao inicializar compras: $error',
+        ),
+      );
+    }
   }
 
   @override
@@ -178,35 +189,35 @@ const List<PurchaseProduct> _mockProducts = [
     id: ProductIds.premiumMonthly,
     title: 'Premium mensal',
     description: 'Sem anuncios, bonus diario e mais vidas.',
-    priceLabel: 'R\$ 14,90 / mes',
+    priceLabel: 'R\$ 7,99 / mes',
     isSubscription: true,
   ),
   PurchaseProduct(
     id: ProductIds.premiumYearly,
     title: 'Premium anual',
     description: 'Plano com desconto para quem joga com frequencia.',
-    priceLabel: 'R\$ 119,90 / ano',
+    priceLabel: 'R\$ 59,90 / ano',
     isSubscription: true,
   ),
   PurchaseProduct(
     id: ProductIds.credits10,
     title: 'Pacote Inicial',
     description: '10 creditos para continuar fases e recuperar vidas.',
-    priceLabel: '10 creditos',
+    priceLabel: 'R\$ 3,99',
     isSubscription: false,
   ),
   PurchaseProduct(
     id: ProductIds.credits50,
     title: 'Mais Popular',
     description: '50 creditos para dicas e segundas chances.',
-    priceLabel: '50 creditos',
+    priceLabel: 'R\$ 9,90',
     isSubscription: false,
   ),
   PurchaseProduct(
     id: ProductIds.credits150,
     title: 'Melhor Valor',
     description: '150 creditos para quem quer evoluir rapido.',
-    priceLabel: '150 creditos',
+    priceLabel: 'R\$ 19,90',
     isSubscription: false,
   ),
 ];

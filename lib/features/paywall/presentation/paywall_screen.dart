@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saber_cristao/core/app_config.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/core/monetization/monetization_provider.dart';
 import 'package:saber_cristao/core/purchases/product_ids.dart';
 import 'package:saber_cristao/core/purchases/purchase_product.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
@@ -35,8 +37,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Cristão Premium')),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.lg + AppSpacing.md,
+          ),
         children: [
           Card(
             child: Padding(
@@ -107,35 +116,37 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
             AppSpacing.v12,
           ],
-          OutlinedButton(
-            onPressed: monetization.isLoading
-                ? null
-                : () async {
-                    final result = await ref
-                        .read(monetizationControllerProvider.notifier)
-                        .restorePurchases();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          result.message ?? 'Restore iniciado.',
-                        ),
-                      ),
-                    );
-                  },
-            child: const Text('Restaurar compras'),
+          AppPrimaryButton(
+            label: 'Restaurar compras',
+            isLoading: monetization.isLoading,
+            onPressed: () async {
+              final result = await ref
+                  .read(monetizationControllerProvider.notifier)
+                  .restorePurchases();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    result.message ?? 'Restore iniciado.',
+                  ),
+                ),
+              );
+            },
           ),
-          if (kDebugMode) ...[
+          AppSpacing.v8,
+          const Text(
+            'Use esta opção se você já assinou o Premium e reinstalou o app ou trocou de aparelho.',
+            style: TextStyle(fontSize: 12),
+          ),
+          if (kDebugMode && AppConfig.showDevBadges) ...[
             AppSpacing.v12,
-            OutlinedButton(
+            AppSecondaryButton(
+              label: monetization.isPremium
+                  ? 'Desativar Premium (dev)'
+                  : 'Simular Premium (dev)',
               onPressed: () => ref
                   .read(monetizationControllerProvider.notifier)
                   .setPremiumDevOnly(!monetization.isPremium),
-              child: Text(
-                monetization.isPremium
-                    ? 'Desativar Premium (dev)'
-                    : 'Simular Premium (dev)',
-              ),
             ),
           ],
           AppSpacing.v12,
@@ -145,11 +156,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             textAlign: TextAlign.center,
           ),
           AppSpacing.v24,
-          OutlinedButton(
+          AppOutlineButton(
+            label: 'Voltar para início',
             onPressed: () => context.go('/home'),
-            child: const Text('Voltar para início'),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -185,9 +197,10 @@ class _PlanCard extends StatelessWidget {
             AppSpacing.v8,
             Text(product.priceLabel),
             AppSpacing.v16,
-            ElevatedButton(
-              onPressed: loading ? null : onTap,
-              child: Text(ctaLabel),
+            AppPrimaryButton(
+              label: ctaLabel,
+              isLoading: loading,
+              onPressed: onTap,
             ),
           ],
         ),

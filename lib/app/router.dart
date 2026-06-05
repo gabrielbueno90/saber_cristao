@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
+import 'package:saber_cristao/features/auth/presentation/auth_callback_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/forgot_password_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/login_screen.dart';
+import 'package:saber_cristao/features/auth/presentation/reset_password_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/register_screen.dart';
 import 'package:saber_cristao/features/home/presentation/home_screen.dart';
 import 'package:saber_cristao/features/home/presentation/splash_screen.dart';
 import 'package:saber_cristao/features/levels/presentation/level_map_screen.dart';
 import 'package:saber_cristao/features/lives/presentation/out_of_lives_screen.dart';
 import 'package:saber_cristao/features/paywall/presentation/paywall_screen.dart';
+import 'package:saber_cristao/features/profile/presentation/profile_screen.dart';
 import 'package:saber_cristao/features/quiz/domain/quiz_result_model.dart';
 import 'package:saber_cristao/features/quiz/presentation/quiz_screen.dart';
 import 'package:saber_cristao/features/quiz/presentation/result_screen.dart';
@@ -24,7 +28,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ref.watch(authControllerProvider.notifier).stream,
   );
 
-  const publicRoutes = {'/login', '/register', '/forgot-password'};
+  const publicRoutes = {
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/auth/callback',
+  };
   const protectedRoutes = {
     '/home',
     '/quiz',
@@ -39,17 +49,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: '/splash',
+    overridePlatformDefaultLocation: true,
     refreshListenable: authRefresh,
     redirect: (context, state) {
       final authState = ref.read(authControllerProvider);
       final location = state.matchedLocation;
+      final uriString = state.uri.toString();
 
       if (authState.status == AuthStatus.loading) return null;
+
+      final isResetLink = uriString.contains('reset-password') ||
+          uriString.contains('type=recovery') ||
+          uriString.contains('token_hash=');
+      if (uriString.contains('login-callback') || uriString.contains('code=')) {
+        return '/auth/callback';
+      }
+      if (isResetLink) {
+        return '/reset-password';
+      }
 
       final isAuthed = authState.status == AuthStatus.authenticated;
       if (!isAuthed && protectedRoutes.contains(location)) return '/login';
       if (!isAuthed && location == '/splash') return '/login';
-      if (isAuthed && (publicRoutes.contains(location) || location == '/splash')) {
+      if (isAuthed &&
+          (publicRoutes.contains(location) || location == '/splash') &&
+          location != '/reset-password') {
         return '/home';
       }
       return null;
@@ -74,6 +98,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (_, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (_, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/auth/callback',
+        builder: (_, state) => const AuthCallbackScreen(),
       ),
       GoRoute(
         path: '/quiz',
@@ -107,13 +139,27 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile',
-        builder: (_, state) => const _SimpleScreen(title: 'Perfil'),
+        builder: (_, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/settings',
         builder: (_, state) => const _SimpleScreen(title: 'Configurações'),
       ),
     ],
+    onException: (context, state, router) {
+      final uriString = state.uri.toString();
+      if (uriString.contains('login-callback') || uriString.contains('code=')) {
+        router.go('/auth/callback');
+        return;
+      }
+      if (uriString.contains('reset-password') ||
+          uriString.contains('type=recovery') ||
+          uriString.contains('token_hash=')) {
+        router.go('/reset-password');
+        return;
+      }
+      router.go('/login');
+    },
   );
 });
 
@@ -143,17 +189,21 @@ class _SimpleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.lg + AppSpacing.md,
+          ),
           children: [
             Center(child: Text(title)),
-            AppSpacing.v16,
-            OutlinedButton(
+            AppSpacing.v24,
+            AppOutlineButton(
+              label: 'Voltar para início',
               onPressed: () => context.go('/home'),
-              child: const Text('Voltar para início'),
             ),
           ],
         ),

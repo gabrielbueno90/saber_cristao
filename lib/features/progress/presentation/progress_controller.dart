@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saber_cristao/core/storage/local_storage_service.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
+import 'package:saber_cristao/core/monetization/monetization_provider.dart';
 import 'package:saber_cristao/features/progress/data/progress_repository.dart';
+import 'package:saber_cristao/features/levels/data/user_level_progress_repository.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
 
@@ -102,6 +104,17 @@ class ProgressController extends StateNotifier<ProgressState> {
     );
     await _ref.read(localStorageProvider).saveStars(state.totalStars);
     await syncToRemote();
+    final auth = _ref.read(authControllerProvider);
+    if (auth.status == AuthStatus.authenticated && auth.user != null) {
+      await _ref.read(userLevelProgressRepositoryProvider).upsertMyProgress(
+            userId: auth.user!.id,
+            level: level,
+            score: score,
+            stars: stars,
+            completed: completed,
+          );
+      _ref.invalidate(myLevelProgressProvider);
+    }
   }
 
   Future<void> syncToRemote() async {
@@ -110,11 +123,12 @@ class ProgressController extends StateNotifier<ProgressState> {
 
     final lives = _ref.read(livesControllerProvider);
     final credits = _ref.read(creditsControllerProvider);
+    final isPremium = _ref.read(monetizationControllerProvider.notifier).isPremium();
     await _ref.read(progressRepositoryProvider).upsertMyProgress(
           userId: auth.user!.id,
           state: state,
           lives: lives,
-          maxLives: 5,
+          maxLives: isPremium ? 10 : 5,
           credits: credits,
         );
     state = state.copyWith(

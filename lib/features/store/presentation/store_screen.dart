@@ -6,6 +6,7 @@ import 'package:saber_cristao/core/monetization/monetization_provider.dart';
 import 'package:saber_cristao/core/purchases/product_ids.dart';
 import 'package:saber_cristao/core/purchases/purchase_product.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class StoreScreen extends ConsumerStatefulWidget {
   const StoreScreen({super.key});
@@ -35,8 +36,15 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Loja de créditos')),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.lg + AppSpacing.md,
+          ),
         children: [
           Card(
             child: Padding(
@@ -84,16 +92,17 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
             'Créditos podem ser usados para continuar fases, recuperar vidas, comprar dicas futuras e garantir uma segunda chance.',
           ),
           AppSpacing.v24,
-          OutlinedButton(
+          AppSecondaryButton(
+            label: 'Conhecer Premium',
             onPressed: () => context.push('/paywall'),
-            child: const Text('Conhecer Premium'),
           ),
           AppSpacing.v12,
-          OutlinedButton(
+          AppOutlineButton(
+            label: 'Voltar para início',
             onPressed: () => context.go('/home'),
-            child: const Text('Voltar para início'),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -138,9 +147,9 @@ class _CreditPackCard extends StatelessWidget {
             AppSpacing.v8,
             Text(product.priceLabel),
             AppSpacing.v16,
-            ElevatedButton(
+            AppPrimaryButton(
+              label: 'Comprar créditos',
               onPressed: onTap,
-              child: const Text('Comprar créditos'),
             ),
           ],
         ),

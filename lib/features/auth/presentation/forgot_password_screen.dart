@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -47,28 +48,30 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             AppSpacing.v24,
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await ref
-                      .read(authControllerProvider.notifier)
-                      .sendPasswordReset(emailController.text.trim());
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Link de recuperacao enviado'),
-                      ),
+            AppPrimaryButton(
+              label: 'Enviar link',
+              onPressed: () async {
+                await ref
+                    .read(authControllerProvider.notifier)
+                    .sendPasswordReset(
+                      emailController.text.trim(),
+                      redirectTo: 'com.sabercristao.app://reset-password/',
                     );
-                  }
-                },
-                child: const Text('Enviar link'),
-              ),
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Enviamos um link de recuperação para o seu email.',
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
             AppSpacing.v16,
-            TextButton(
+            AppOutlineButton(
+              label: 'Voltar para Login',
               onPressed: () => context.go('/login'),
-              child: const Text('Voltar para Login'),
             ),
             ],
           ),

@@ -15,6 +15,7 @@ class LivesController extends StateNotifier<int> {
   Future<void> loseLife() async {
     state = (state - 1).clamp(0, 99);
     await _storage.saveLives(state);
+    await _storage.saveLastLifeRegenAt(DateTime.now());
   }
 
   Future<void> addLife([int amount = 1]) async {

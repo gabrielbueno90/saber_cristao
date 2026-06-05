@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
 import 'package:saber_cristao/core/ads/banner_ad_widget.dart';
+import 'package:saber_cristao/core/app_config.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/core/monetization/ad_placement.dart';
 import 'package:saber_cristao/core/monetization/monetization_provider.dart';
@@ -11,6 +11,7 @@ import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -52,7 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            if (kDebugMode) ...[
+            if (AppConfig.showDevBadges) ...[
               Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
@@ -131,19 +132,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             AppSpacing.v24,
-            ElevatedButton(
+            AppPrimaryButton(
+              label: 'Começar desafio',
               onPressed: () => context.push('/quiz?level=${progress.currentLevel}'),
-              child: const Text('Começar desafio'),
             ),
             AppSpacing.v12,
-            OutlinedButton(
+            AppSecondaryButton(
+              label: 'Ver fases',
               onPressed: () => context.push('/levels'),
-              child: const Text('Ver fases'),
             ),
             AppSpacing.v12,
-            OutlinedButton(
+            AppSecondaryButton(
+              label: 'Créditos e loja',
               onPressed: () => context.push('/store'),
-              child: const Text('Créditos e loja'),
             ),
             AppSpacing.v16,
             Card(
@@ -160,9 +161,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       AppSpacing.v8,
                       const Text('Jogue sem anúncios e receba benefícios diários.'),
                       AppSpacing.v16,
-                      ElevatedButton(
+                      AppPrimaryButton(
+                        label: 'Conhecer Premium',
                         onPressed: () => context.push('/paywall'),
-                        child: const Text('Conhecer Premium'),
                       ),
                     ] else ...[
                       const Text(
@@ -176,23 +177,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            if (kDebugMode) ...[
+            if (AppConfig.showDevBadges) ...[
               AppSpacing.v12,
-              OutlinedButton(
+              AppSecondaryButton(
+                label: monetization.isPremium
+                    ? 'Desativar Premium (dev)'
+                    : 'Simular Premium (dev)',
                 onPressed: () => ref
                     .read(monetizationControllerProvider.notifier)
                     .setPremiumDevOnly(!monetization.isPremium),
-                child: Text(
-                  monetization.isPremium
-                      ? 'Desativar Premium (dev)'
-                      : 'Simular Premium (dev)',
-                ),
               ),
             ],
             AppSpacing.v12,
-            TextButton(
+            AppOutlineButton(
+              label: 'Abrir perfil',
               onPressed: () => context.push('/profile'),
-              child: const Text('Abrir perfil'),
             ),
             AppSpacing.v16,
             const MonetizedBannerSlot(placement: AdPlacement.home),

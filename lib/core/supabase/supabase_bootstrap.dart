@@ -6,8 +6,12 @@ Future<void> bootstrapSupabase() async {
     return;
   }
 
-  await Supabase.initialize(
-    url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.anonKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+    );
+  } catch (_) {
+    // Keep app startup resilient: if Supabase fails, app continues in fallback mode.
+  }
 }

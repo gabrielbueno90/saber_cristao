@@ -26,10 +26,14 @@ class AdMobService implements AdService {
   @override
   Future<void> initialize() async {
     if (_initialized || kIsWeb) return;
-    await MobileAds.instance.initialize();
-    await _interstitialManager.preload();
-    await _rewardedManager.preload();
-    _initialized = true;
+    try {
+      await MobileAds.instance.initialize();
+      await _interstitialManager.preload();
+      await _rewardedManager.preload();
+      _initialized = true;
+    } catch (_) {
+      _initialized = false;
+    }
   }
 
   @override

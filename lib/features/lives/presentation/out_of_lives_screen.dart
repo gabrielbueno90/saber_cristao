@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saber_cristao/core/storage/local_storage_service.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/core/monetization/monetization_provider.dart';
 import 'package:saber_cristao/core/monetization/reward_type.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
 import 'package:saber_cristao/features/store/presentation/credits_controller.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class OutOfLivesScreen extends ConsumerWidget {
   const OutOfLivesScreen({super.key});
@@ -15,11 +17,19 @@ class OutOfLivesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final monetization = ref.watch(monetizationControllerProvider);
+    final isPremium = monetization.isPremium;
+    final interval = Duration(minutes: isPremium ? 15 : 30);
     return Scaffold(
       appBar: AppBar(title: const Text('Sem vidas')),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+      body: SafeArea(
+        top: false,
         child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.lg + AppSpacing.md,
+          ),
           children: [
             const Text(
               'Você ficou sem vidas',
@@ -29,9 +39,26 @@ class OutOfLivesScreen extends ConsumerWidget {
             const Text(
               'Continue sua jornada bíblica escolhendo uma das opções abaixo.',
             ),
+            AppSpacing.v8,
+            FutureBuilder<DateTime?>(
+              future: ref.read(localStorageProvider).getLastLifeRegenAt(),
+              builder: (context, snapshot) {
+                final last = snapshot.data;
+                final elapsed = last == null ? Duration.zero : DateTime.now().difference(last);
+                final remaining = interval - elapsed;
+                final display = remaining.isNegative
+                    ? '00:00'
+                    : _formatDuration(remaining);
+                return Text(
+                  'Próxima vida em: $display',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                );
+              },
+            ),
             AppSpacing.v24,
-            if (!monetization.isPremium) ...[
-              ElevatedButton(
+            if (!isPremium) ...[
+              AppPrimaryButton(
+                label: 'Assistir anúncio e ganhar 1 vida',
                 onPressed: () async {
                   final rewarded = await ref
                       .read(monetizationControllerProvider.notifier)
@@ -53,11 +80,19 @@ class OutOfLivesScreen extends ConsumerWidget {
                   }
                   if (context.mounted) context.go('/quiz');
                 },
-                child: const Text('Assistir anúncio e ganhar 1 vida'),
               ),
               AppSpacing.v12,
             ],
-            OutlinedButton(
+            if (isPremium) ...[
+              AppSpacing.v12,
+              const Text(
+                'Você ficou sem vidas, mas sua recuperação é mais rápida como Premium.',
+                textAlign: TextAlign.center,
+              ),
+              AppSpacing.v12,
+            ],
+            AppSecondaryButton(
+              label: 'Usar 1 crédito para continuar',
               onPressed: () async {
                 final ok = await ref.read(creditsControllerProvider.notifier).spendCredits(1);
                 if (!context.mounted) return;
@@ -71,33 +106,32 @@ class OutOfLivesScreen extends ConsumerWidget {
                 await ref.read(progressControllerProvider.notifier).syncToRemote();
                 if (context.mounted) context.go('/quiz');
               },
-              child: const Text('Usar 1 crédito para continuar'),
             ),
             AppSpacing.v12,
-            OutlinedButton(
+            AppSecondaryButton(
+              label: 'Comprar créditos',
               onPressed: () => context.push('/store'),
-              child: const Text('Comprar créditos'),
             ),
             AppSpacing.v12,
-            OutlinedButton(
+            AppSecondaryButton(
+              label: 'Conhecer Premium',
               onPressed: () => context.push('/paywall'),
-              child: const Text('Conhecer Premium'),
             ),
-            if (monetization.isPremium) ...[
-              AppSpacing.v12,
-              const Text(
-                'Premium ativo: seus anúncios ficam desativados.',
-                textAlign: TextAlign.center,
-              ),
-            ],
             AppSpacing.v24,
-            TextButton(
+            AppOutlineButton(
+              label: 'Voltar para início',
               onPressed: () => context.go('/home'),
-              child: const Text('Voltar para início'),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+String _formatDuration(Duration duration) {
+  final safe = duration.isNegative ? Duration.zero : duration;
+  final minutes = safe.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = safe.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$minutes:$seconds';
 }

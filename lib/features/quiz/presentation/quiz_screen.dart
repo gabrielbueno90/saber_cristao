@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/app_config.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/lives/presentation/lives_controller.dart';
 import 'package:saber_cristao/features/progress/presentation/progress_controller.dart';
@@ -113,14 +114,16 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
               ),
             ),
             AppSpacing.v16,
-            if (kDebugMode && controller.loadWarning != null) ...[
+            if (kDebugMode &&
+                AppConfig.showDevBadges &&
+                controller.loadWarning != null) ...[
               Text(
                 controller.loadWarning!,
                 style: const TextStyle(color: AppTheme.error),
               ),
               AppSpacing.v12,
             ],
-            if (kDebugMode) ...[
+            if (kDebugMode && AppConfig.showDevBadges) ...[
               Text(
                 controller.questionsFromSupabase
                     ? 'Perguntas: Supabase | dificuldade ${controller.expectedDifficulty} | ${controller.expectedQuestionCount} perguntas'

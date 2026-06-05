@@ -11,7 +11,7 @@ class AdFrequencyController {
     final current = await _storage.getInterstitialCounter();
     final next = current + 1;
     await _storage.saveInterstitialCounter(next);
-    if (next < MonetizationConstants.interstitialEveryNQuizCompletions) {
+    if (next < MonetizationConstants.interstitialEveryCompletedLevels) {
       return false;
     }
     await _storage.saveInterstitialCounter(0);

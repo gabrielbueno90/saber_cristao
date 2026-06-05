@@ -7,6 +7,7 @@ class LocalStorageService {
   static const _starsKey = 'local_stars';
   static const _premiumDevKey = 'premium_dev_override';
   static const _interstitialCounterKey = 'interstitial_counter';
+  static const _lastLifeRegenAtKey = 'last_life_regen_at';
 
   Future<void> saveLives(int value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -56,6 +57,18 @@ class LocalStorageService {
   Future<int> getInterstitialCounter({int fallback = 0}) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_interstitialCounterKey) ?? fallback;
+  }
+
+  Future<void> saveLastLifeRegenAt(DateTime value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastLifeRegenAtKey, value.toIso8601String());
+  }
+
+  Future<DateTime?> getLastLifeRegenAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_lastLifeRegenAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
   }
 }
 

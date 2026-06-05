@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber_cristao/app/theme.dart';
+import 'package:saber_cristao/core/app_config.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
+import 'package:saber_cristao/features/auth/data/supabase_auth_repository.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
+import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +30,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final authRepository = ref.watch(authRepositoryProvider);
     final loading = authState.status == AuthStatus.loading;
+    final googleEnabled = authRepository.canUseGoogleSignIn;
 
     ref.listen<AuthState>(authControllerProvider, (_, next) {
       if (next.status == AuthStatus.authenticated) {
@@ -54,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (kDebugMode) ...[
+                    if (AppConfig.showDevBadges) ...[
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Chip(
@@ -93,41 +97,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: const InputDecoration(labelText: 'Senha'),
                     ),
                     AppSpacing.v16,
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: loading
-                            ? null
-                            : () => ref
-                                .read(authControllerProvider.notifier)
-                                .signInWithEmail(
-                                  emailController.text.trim(),
-                                  passwordController.text.trim(),
-                                ),
-                        child: const Text('Entrar'),
-                      ),
+                    AppPrimaryButton(
+                      label: 'Entrar',
+                      isLoading: loading,
+                      onPressed: () => ref
+                          .read(authControllerProvider.notifier)
+                          .signInWithEmail(
+                            emailController.text.trim(),
+                            passwordController.text.trim(),
+                          ),
                     ),
                     AppSpacing.v12,
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: loading
-                            ? null
-                            : () => ref
-                                .read(authControllerProvider.notifier)
-                                .signInWithGoogle(),
-                        child: const Text('Entrar com Google'),
-                      ),
+                    AppSecondaryButton(
+                      label: googleEnabled ? 'Entrar com Google' : 'Google em breve',
+                      isLoading: loading,
+                      onPressed: (!googleEnabled || loading)
+                          ? null
+                          : () => ref
+                              .read(authControllerProvider.notifier)
+                              .signInWithGoogle(),
                     ),
                     AppSpacing.v12,
-                    TextButton(
+                    AppOutlineButton(
+                      label: 'Criar conta',
                       onPressed: () => context.push('/register'),
-                      child: const Text('Criar conta'),
                     ),
                     AppSpacing.v8,
-                    TextButton(
+                    AppOutlineButton(
+                      label: 'Esqueci minha senha',
                       onPressed: () => context.push('/forgot-password'),
-                      child: const Text('Esqueci minha senha'),
                     ),
                     AppSpacing.v12,
                     if (authState.status == AuthStatus.error)

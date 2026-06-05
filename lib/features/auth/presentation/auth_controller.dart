@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saber_cristao/features/auth/data/supabase_auth_repository.dart';
+import 'package:saber_cristao/features/auth/domain/google_sign_in_availability.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
 
 class AuthController extends StateNotifier<AuthState> {
@@ -14,6 +16,18 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> _bootstrap() async {
     final repo = _ref.read(authRepositoryProvider);
+    if (kDebugMode) {
+      debugPrint(
+        '[AuthController] bootstrap isUsingSupabase=${repo.isUsingSupabase} '
+        'canUseGoogleSignIn=${repo.canUseGoogleSignIn}',
+      );
+    }
+    final googleAvailability = await repo.diagnoseGoogleSignIn();
+    if (kDebugMode) {
+      debugPrint(
+        '[AuthController] googleAvailability=${googleAvailability.label}',
+      );
+    }
     final user = await repo.currentUser();
     if (user == null) {
       state = AuthState(
@@ -78,10 +92,10 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> sendPasswordReset(String email) async {
+  Future<void> sendPasswordReset(String email, {required String redirectTo}) async {
     final repo = _ref.read(authRepositoryProvider);
     try {
-      await repo.sendPasswordReset(email);
+      await repo.sendPasswordReset(email, redirectTo: redirectTo);
     } catch (_) {
       state = AuthState.error(
         'Falha ao enviar recuperacao de senha.',
@@ -90,13 +104,39 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> updatePassword(String password) async {
+    final repo = _ref.read(authRepositoryProvider);
+    try {
+      await repo.updatePassword(password);
+    } catch (_) {
+      state = AuthState.error(
+        'Nao foi possivel atualizar a senha agora.',
+        isUsingSupabase: repo.isUsingSupabase,
+      );
+      rethrow;
+    }
+  }
+
   Future<void> signInWithGoogle() async {
     final repo = _ref.read(authRepositoryProvider);
+    final googleAvailability = await repo.diagnoseGoogleSignIn();
+    if (kDebugMode) {
+      debugPrint(
+        '[AuthController] signInWithGoogle availability=${googleAvailability.label}',
+      );
+    }
+    if (!repo.canUseGoogleSignIn) {
+      state = AuthState.error(
+        'Login com Google ainda nao esta disponivel. Use email e senha por enquanto.',
+        isUsingSupabase: repo.isUsingSupabase,
+      );
+      return;
+    }
     try {
       await repo.signInWithGoogle();
     } catch (_) {
       state = AuthState.error(
-        'Falha no login com Google.',
+        'Nao foi possivel entrar com Google agora. Tente novamente ou use email e senha.',
         isUsingSupabase: repo.isUsingSupabase,
       );
     }

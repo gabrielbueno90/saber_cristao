@@ -29,6 +29,16 @@ Passo a passo pratico:
 10. Instalar o app pelo link de teste interno.
 11. Testar compras com uma conta incluida como tester.
 
+### Precos visuais atuais do app
+
+- `premium_monthly`: `R$ 7,99 / mes`
+- `premium_yearly`: `R$ 59,90 / ano`
+- `credits_10`: `R$ 3,99`
+- `credits_50`: `R$ 9,90`
+- `credits_150`: `R$ 19,90`
+
+Esses valores ainda sao visuais/mock até serem ajustados na Play Console.
+
 ## App Store Connect
 Passo a passo pratico:
 
