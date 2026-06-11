@@ -167,6 +167,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             AppSpacing.v16,
           ],
+          AppSecondaryButton(
+            label: 'Alterar senha',
+            onPressed: () => context.push('/change-password'),
+          ),
+          AppSpacing.v12,
           AppPrimaryButton(
             label: 'Restaurar compras',
             onPressed: () async {

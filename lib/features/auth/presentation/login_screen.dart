@@ -17,6 +17,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -35,7 +36,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final googleEnabled = authRepository.canUseGoogleSignIn;
 
     ref.listen<AuthState>(authControllerProvider, (_, next) {
-      if (next.status == AuthStatus.authenticated) {
+      if (next.status == AuthStatus.authenticated &&
+          !next.requiresPasswordReset) {
         context.go('/home');
       }
     });
@@ -55,85 +57,89 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(18),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (AppConfig.showDevBadges) ...[
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Chip(
-                          label: Text(
-                            authState.isUsingSupabase
-                                ? 'Supabase conectado'
-                                : 'Modo mock',
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (AppConfig.showDevBadges) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Chip(
+                            label: Text(
+                              authState.isUsingSupabase
+                                  ? 'Supabase conectado'
+                                  : 'Modo mock',
+                            ),
                           ),
                         ),
+                        AppSpacing.v12,
+                      ],
+                      const Text(
+                        'Saber Cristão',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textDark,
+                        ),
+                      ),
+                      AppSpacing.v8,
+                      const Text(
+                        'Aprenda a Bíblia jogando, avance por desafios e fortaleça sua fé.',
+                        textAlign: TextAlign.center,
+                      ),
+                      AppSpacing.v24,
+                      TextFormField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        enabled: !loading,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: _validateEmail,
+                        decoration: const InputDecoration(labelText: 'Email'),
                       ),
                       AppSpacing.v12,
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        enabled: !loading,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: _validatePassword,
+                        decoration: const InputDecoration(labelText: 'Senha'),
+                      ),
+                      AppSpacing.v16,
+                      AppPrimaryButton(
+                        label: 'Entrar',
+                        isLoading: loading,
+                        onPressed: loading ? null : _submitLogin,
+                      ),
+                      AppSpacing.v12,
+                      AppSecondaryButton(
+                        label: googleEnabled ? 'Entrar com Google' : 'Google em breve',
+                        isLoading: loading,
+                        onPressed: (!googleEnabled || loading)
+                            ? null
+                            : () => ref
+                                .read(authControllerProvider.notifier)
+                                .signInWithGoogle(),
+                      ),
+                      AppSpacing.v12,
+                      AppOutlineButton(
+                        label: 'Criar conta',
+                        onPressed: loading ? null : () => context.push('/register'),
+                      ),
+                      AppSpacing.v8,
+                      AppOutlineButton(
+                        label: 'Esqueci minha senha',
+                        onPressed: loading ? null : () => context.push('/forgot-password'),
+                      ),
+                      AppSpacing.v12,
+                      if (authState.status == AuthStatus.error)
+                        Text(
+                          authState.errorMessage ?? 'Erro de autenticacao',
+                          style: const TextStyle(color: AppTheme.error),
+                        ),
                     ],
-                    const Text(
-                      'Saber Cristão',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                    AppSpacing.v8,
-                    const Text(
-                      'Aprenda a Bíblia jogando, avance por desafios e fortaleça sua fé.',
-                      textAlign: TextAlign.center,
-                    ),
-                    AppSpacing.v24,
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                    ),
-                    AppSpacing.v12,
-                    TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Senha'),
-                    ),
-                    AppSpacing.v16,
-                    AppPrimaryButton(
-                      label: 'Entrar',
-                      isLoading: loading,
-                      onPressed: () => ref
-                          .read(authControllerProvider.notifier)
-                          .signInWithEmail(
-                            emailController.text.trim(),
-                            passwordController.text.trim(),
-                          ),
-                    ),
-                    AppSpacing.v12,
-                    AppSecondaryButton(
-                      label: googleEnabled ? 'Entrar com Google' : 'Google em breve',
-                      isLoading: loading,
-                      onPressed: (!googleEnabled || loading)
-                          ? null
-                          : () => ref
-                              .read(authControllerProvider.notifier)
-                              .signInWithGoogle(),
-                    ),
-                    AppSpacing.v12,
-                    AppOutlineButton(
-                      label: 'Criar conta',
-                      onPressed: () => context.push('/register'),
-                    ),
-                    AppSpacing.v8,
-                    AppOutlineButton(
-                      label: 'Esqueci minha senha',
-                      onPressed: () => context.push('/forgot-password'),
-                    ),
-                    AppSpacing.v12,
-                    if (authState.status == AuthStatus.error)
-                      Text(
-                        authState.errorMessage ?? 'Erro de autenticacao',
-                        style: const TextStyle(color: AppTheme.error),
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -141,5 +147,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
     );
+  }
+
+  String? _validateEmail(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'Informe seu email.';
+    }
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(trimmed)) {
+      return 'Informe um email válido.';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if ((value ?? '').trim().isEmpty) {
+      return 'Informe sua senha.';
+    }
+    return null;
+  }
+
+  Future<void> _submitLogin() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+    await ref.read(authControllerProvider.notifier).signInWithEmail(
+          emailController.text.trim(),
+          passwordController.text,
+        );
   }
 }

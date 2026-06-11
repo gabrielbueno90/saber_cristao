@@ -1,6 +1,16 @@
 import 'package:saber_cristao/features/auth/domain/auth_user.dart';
 import 'package:saber_cristao/features/auth/domain/google_sign_in_availability.dart';
 
+class RegisterResult {
+  const RegisterResult({
+    required this.requiresEmailConfirmation,
+    this.user,
+  });
+
+  final bool requiresEmailConfirmation;
+  final AuthUser? user;
+}
+
 abstract class AuthRepository {
   bool get isUsingSupabase;
   bool get canUseGoogleSignIn;
@@ -11,12 +21,12 @@ abstract class AuthRepository {
     required String email,
     required String password,
   });
-  Future<void> registerWithEmail({
+  Future<RegisterResult> registerWithEmail({
     required String name,
     required String email,
     required String password,
   });
-  Future<void> sendPasswordReset(
+  Future<bool> sendPasswordReset(
     String email, {
     required String redirectTo,
   });

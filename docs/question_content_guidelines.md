@@ -8,7 +8,7 @@ Produzir perguntas bíblicas e doutrinárias:
 - claras,
 - fiéis às Escrituras,
 - acessíveis ao público geral,
-- coerentes com uma perspectiva cristã protestante reformada,
+- coerentes com uma perspectiva cristã bíblica e centrada em Cristo,
 - adequadas para um jogo curto, progressivo e comercial.
 
 ## Schema obrigatório
@@ -133,7 +133,7 @@ Usar tags curtas e consistentes, por exemplo:
 - `santificacao`
 - `oracao`
 - `misericordia`
-- `teologia_reformada`
+- `teologia_biblica`
 
 Regra:
 - preferir `snake_case`;
@@ -164,7 +164,7 @@ Uso recomendado:
 
 - Manter fidelidade bíblica.
 - Priorizar consenso cristão histórico nas perguntas iniciais.
-- Em conteúdo reformado, usar linguagem clara e pastoral.
+- Em conteúdo bíblico, usar linguagem clara e pastoral.
 - Evitar polêmicas avançadas no começo.
 - Evitar transformar debates secundários em verdade central do evangelho.
 
@@ -201,3 +201,30 @@ Antes de marcar uma pergunta como `approved`, revisar:
 - Balancear dificuldade para retenção do jogador.
 - Incluir revisão humana antes de publicar em massa.
 - Marcar perguntas sensíveis para revisão teológica adicional.
+
+## Linha bíblica centrada em Cristo do Saber Cristão
+
+Estas perguntas devem refletir uma leitura bíblica centrada em Cristo, com tom pastoral e acessível.
+
+Diretrizes:
+
+1. A Bíblia é o centro.
+2. A doutrina bíblica entra como lente, não como polêmica.
+3. O conteúdo deve ser compatível com a tradição cristã histórica.
+4. Cristo deve ser apresentado como centro da redenção.
+5. A graça deve ser explicada biblicamente.
+6. A soberania de Deus deve ser ensinada com cuidado pastoral.
+7. A justificação deve ser distinguida de santificação.
+8. Boas obras devem ser tratadas como fruto da fé, não base da salvação.
+9. Aliança, igreja e sacramentos devem ser explicados de forma acessível.
+10. Evitar ataques a outras denominações.
+11. Evitar linguagem acadêmica demais.
+12. Evitar polêmica desnecessária.
+13. Cada pergunta deve ensinar algo.
+14. Cada explicação deve ser curta, clara e edificante.
+15. Usar referência bíblica sempre que possível.
+16. Evitar longas citações literais de traduções bíblicas modernas por direitos autorais.
+17. Para níveis iniciais, priorizar Bíblia, personagens, narrativas e evangelho.
+18. Para níveis médios, conectar textos bíblicos e doutrina.
+19. Para níveis difíceis, aprofundar teologia bíblica e cristocêntrica.
+20. O objetivo é formar amor pela Bíblia, não apenas testar memória.

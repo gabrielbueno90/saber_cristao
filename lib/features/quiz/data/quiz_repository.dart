@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saber_cristao/core/supabase/supabase_client_provider.dart';
 import 'package:saber_cristao/features/quiz/domain/question_model.dart';
@@ -66,11 +67,12 @@ class SupabaseQuizRepository implements QuizRepository {
         .eq('difficulty', difficulty)
         .limit(40);
 
-    final exactQuestions = _mapRows(exactRows);
+    final exactQuestions = _uniqueById(_mapRows(exactRows));
     exactQuestions.shuffle();
 
     final selected = exactQuestions.take(limit).toList();
-    var warning = selected.length < limit
+    final usedFallback = selected.length < limit;
+    var warning = usedFallback
         ? 'Poucas perguntas no nível exato. Completando pela dificuldade da fase.'
         : null;
 
@@ -85,7 +87,7 @@ class SupabaseQuizRepository implements QuizRepository {
           .limit(80);
 
       final usedIds = selected.map((item) => item.id).toSet();
-      final fallbackQuestions = _mapRows(difficultyRows)
+      final fallbackQuestions = _uniqueById(_mapRows(difficultyRows))
           .where((item) => !usedIds.contains(item.id))
           .toList()
         ..shuffle();
@@ -96,6 +98,16 @@ class SupabaseQuizRepository implements QuizRepository {
       warning = 'Sem perguntas aprovadas para esta fase. Usando fallback mock.';
     } else if (selected.length < limit) {
       warning = 'Banco retornou menos perguntas que o ideal para esta fase.';
+    }
+
+    selected.shuffle();
+    if (kDebugMode) {
+      debugPrint(
+        '[QuizRepository] level=$level difficulty=$difficulty '
+        'language=$language poolExact=${exactQuestions.length} '
+        'selected=${selected.length} usedFallback=$usedFallback '
+        'ids=${selected.map((item) => item.id).join(",")}',
+      );
     }
 
     return QuizQuestionLoadResult(
@@ -109,6 +121,17 @@ class SupabaseQuizRepository implements QuizRepository {
     return (rows as List)
         .map((item) => QuestionModel.fromSupabase(item as Map<String, dynamic>))
         .toList();
+  }
+
+  List<QuestionModel> _uniqueById(List<QuestionModel> questions) {
+    final seen = <String>{};
+    final unique = <QuestionModel>[];
+    for (final question in questions) {
+      if (seen.add(question.id)) {
+        unique.add(question);
+      }
+    }
+    return unique;
   }
 
   @override

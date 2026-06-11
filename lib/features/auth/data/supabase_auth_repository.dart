@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:saber_cristao/core/app_config.dart';
 import 'package:saber_cristao/core/supabase/supabase_client_provider.dart';
 import 'package:saber_cristao/features/auth/data/auth_repository.dart';
@@ -24,7 +22,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<GoogleSignInAvailability> diagnoseGoogleSignIn() async {
-    final availability = await _googleSignInAvailability();
+    final availability = _localGoogleSignInAvailability();
     if (kDebugMode) {
       debugPrint(
         '[SupabaseAuthRepository] canUseGoogleSignIn=$canUseGoogleSignIn '
@@ -51,29 +49,61 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> registerWithEmail({
+  Future<RegisterResult> registerWithEmail({
     required String name,
     required String email,
     required String password,
   }) async {
-    if (_client == null) return;
-    await _client.auth.signUp(
+    if (_client == null) {
+      return const RegisterResult(requiresEmailConfirmation: false);
+    }
+    final response = await _client.auth.signUp(
       email: email,
       password: password,
       data: {'display_name': name},
     );
+    final user = response.user;
+    return RegisterResult(
+      requiresEmailConfirmation: response.session == null && user != null,
+      user: user == null ? null : _mapUser(user),
+    );
   }
 
   @override
-  Future<void> sendPasswordReset(
+  Future<bool> sendPasswordReset(
     String email, {
     required String redirectTo,
   }) async {
-    if (_client == null) return;
-    await _client.auth.resetPasswordForEmail(
-      email,
-      redirectTo: redirectTo,
-    );
+    if (_client == null) {
+      if (kDebugMode) {
+        debugPrint(
+          '[SupabaseAuthRepository] sendPasswordReset failed: supabaseNotConfigured',
+        );
+      }
+      return false;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[SupabaseAuthRepository] sendPasswordReset requested',
+      );
+    }
+
+    try {
+      await _client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: redirectTo,
+      );
+      if (kDebugMode) {
+        debugPrint('[SupabaseAuthRepository] sendPasswordReset result=success');
+      }
+      return true;
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[SupabaseAuthRepository] sendPasswordReset result=error error=$error');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -106,15 +136,6 @@ class SupabaseAuthRepository implements AuthRepository {
         debugPrint('[SupabaseAuthRepository] signInWithGoogle failed: supabaseNotConfigured');
       }
       throw Exception('Supabase indisponivel.');
-    }
-    final availability = await _googleSignInAvailability();
-    if (kDebugMode) {
-      debugPrint(
-        '[SupabaseAuthRepository] signInWithGoogle availability=${availability.label}',
-      );
-    }
-    if (availability != GoogleSignInAvailability.enabled) {
-      throw Exception('Google provider disabled');
     }
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
@@ -149,7 +170,7 @@ class SupabaseAuthRepository implements AuthRepository {
     );
   }
 
-  Future<GoogleSignInAvailability> _googleSignInAvailability() async {
+  GoogleSignInAvailability _localGoogleSignInAvailability() {
     if (!AppConfig.enableGoogleSignIn) {
       return GoogleSignInAvailability.disabledByFlag;
     }
@@ -157,63 +178,17 @@ class SupabaseAuthRepository implements AuthRepository {
     if (_client == null || AppConfig.supabaseUrl.isEmpty || AppConfig.supabaseAnonKey.isEmpty) {
       return GoogleSignInAvailability.supabaseNotConfigured;
     }
-
-    final uri = Uri.parse('${AppConfig.supabaseUrl}/auth/v1/settings');
-    if (kDebugMode) {
-      debugPrint('[SupabaseAuthRepository] GET /auth/v1/settings => $uri');
-    }
-
-    try {
-      final response = await http.get(
-        uri,
-        headers: <String, String>{
-          'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
-        },
-      );
-
-      if (kDebugMode) {
-        debugPrint(
-          '[SupabaseAuthRepository] /auth/v1/settings status=${response.statusCode}',
-        );
-      }
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        return GoogleSignInAvailability.settingsRequestFailed;
-      }
-
-      final dynamic parsed = jsonDecode(response.body);
-      if (parsed is! Map<String, dynamic>) {
-        return GoogleSignInAvailability.settingsRequestFailed;
-      }
-      final dynamic external = parsed['external'];
-      if (external is! Map<String, dynamic>) {
-        return GoogleSignInAvailability.settingsRequestFailed;
-      }
-      final dynamic google = external['google'];
-      final enabled = google == true;
-      if (kDebugMode) {
-        debugPrint(
-          '[SupabaseAuthRepository] provider google enabled=$enabled',
-        );
-      }
-      return enabled
-          ? GoogleSignInAvailability.enabled
-          : GoogleSignInAvailability.providerDisabled;
-    } catch (error) {
-      if (kDebugMode) {
-        debugPrint(
-          '[SupabaseAuthRepository] /auth/v1/settings failed: $error',
-        );
-      }
-      return GoogleSignInAvailability.settingsRequestFailed;
-    }
+    return GoogleSignInAvailability.enabled;
   }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
-  if (client == null) return MockAuthRepository();
+  if (client == null) {
+    return AppConfig.enableMockAuth
+        ? MockAuthRepository()
+        : const DisabledAuthRepository();
+  }
   return SupabaseAuthRepository(client);
 });
 
@@ -241,7 +216,7 @@ class MockAuthRepository implements AuthRepository {
   Future<void> ensureProfile(domain.AuthUser user) async {}
 
   @override
-  Future<void> registerWithEmail({
+  Future<RegisterResult> registerWithEmail({
     required String name,
     required String email,
     required String password,
@@ -253,13 +228,17 @@ class MockAuthRepository implements AuthRepository {
       provider: 'email',
     );
     _controller.add(_user);
+    return RegisterResult(
+      requiresEmailConfirmation: false,
+      user: _user,
+    );
   }
 
   @override
-  Future<void> sendPasswordReset(
+  Future<bool> sendPasswordReset(
     String email, {
     required String redirectTo,
-  }) async {}
+  }) async => true;
 
   @override
   Future<void> updatePassword(String password) async {}
@@ -293,5 +272,72 @@ class MockAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     _user = null;
     _controller.add(null);
+  }
+}
+
+class DisabledAuthRepository implements AuthRepository {
+  const DisabledAuthRepository();
+
+  @override
+  bool get isUsingSupabase => false;
+
+  @override
+  bool get canUseGoogleSignIn => false;
+
+  @override
+  Future<GoogleSignInAvailability> diagnoseGoogleSignIn() async =>
+      GoogleSignInAvailability.supabaseNotConfigured;
+
+  @override
+  Stream<domain.AuthUser?> authStateChanges() => Stream<domain.AuthUser?>.empty();
+
+  @override
+  Future<domain.AuthUser?> currentUser() async => null;
+
+  @override
+  Future<void> ensureProfile(domain.AuthUser user) async {}
+
+  Never _fail() {
+    throw Exception('Supabase indisponivel.');
+  }
+
+  @override
+  Future<RegisterResult> registerWithEmail({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    _fail();
+  }
+
+  @override
+  Future<bool> sendPasswordReset(
+    String email, {
+    required String redirectTo,
+  }) async {
+    _fail();
+  }
+
+  @override
+  Future<void> updatePassword(String password) async {
+    _fail();
+  }
+
+  @override
+  Future<void> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    _fail();
+  }
+
+  @override
+  Future<void> signOut() async {
+    _fail();
+  }
+
+  @override
+  Future<void> signInWithGoogle() async {
+    _fail();
   }
 }

@@ -10,6 +10,7 @@ import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_callback_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/forgot_password_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/login_screen.dart';
+import 'package:saber_cristao/features/auth/presentation/change_password_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/reset_password_screen.dart';
 import 'package:saber_cristao/features/auth/presentation/register_screen.dart';
 import 'package:saber_cristao/features/home/presentation/home_screen.dart';
@@ -45,6 +46,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     '/paywall',
     '/profile',
     '/settings',
+    '/change-password',
   };
 
   return GoRouter(
@@ -57,6 +59,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final uriString = state.uri.toString();
 
       if (authState.status == AuthStatus.loading) return null;
+      if (authState.requiresPasswordReset && location != '/reset-password') {
+        return '/reset-password';
+      }
 
       final isResetLink = uriString.contains('reset-password') ||
           uriString.contains('type=recovery') ||
@@ -104,6 +109,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => const ResetPasswordScreen(),
       ),
       GoRoute(
+        path: '/change-password',
+        builder: (_, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
         path: '/auth/callback',
         builder: (_, state) => const AuthCallbackScreen(),
       ),
@@ -147,7 +156,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     onException: (context, state, router) {
+      final authState = ref.read(authControllerProvider);
       final uriString = state.uri.toString();
+      if (authState.requiresPasswordReset) {
+        router.go('/reset-password');
+        return;
+      }
       if (uriString.contains('login-callback') || uriString.contains('code=')) {
         router.go('/auth/callback');
         return;

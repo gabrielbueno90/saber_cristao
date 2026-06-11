@@ -190,7 +190,20 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                         ),
                       ),
                       AppSpacing.v8,
+                      if (_selectedIndex != question.correctIndex) ...[
+                        Text(
+                          'A resposta correta é: ${question.options[question.correctIndex]}.',
+                        ),
+                        AppSpacing.v8,
+                      ],
                       Text(question.explanation),
+                      if (question.bibleReference.trim().isNotEmpty) ...[
+                        AppSpacing.v8,
+                        Text(
+                          'Referência: ${question.bibleReference}',
+                          style: const TextStyle(color: AppTheme.textMuted),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -226,10 +239,6 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
               ),
             ],
             const Spacer(),
-            Text(
-              'Referência: ${question.bibleReference}',
-              style: const TextStyle(color: AppTheme.textMuted),
-            ),
             ],
           ),
         ),

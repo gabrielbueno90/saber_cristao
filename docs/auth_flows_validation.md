@@ -2,6 +2,12 @@
 
 ## Checklist
 
+## Status RC1
+- Login email/senha: ativo e travado para sessão real apenas.
+- Login Google: ativo com tentativa real de OAuth.
+- Recuperação por email: ativa, mas depende de validação real de SMTP/email no ambiente.
+- Alterar senha logado: implementado em `/change-password`.
+
 ### 1. Cadastro email/senha
 - Abrir `/register`
 - Criar conta
@@ -30,13 +36,19 @@
 ### 6. Recuperação de senha
 - Abrir `/forgot-password`
 - Enviar link de recuperação
-- Confirmar email recebido
+- Confirmar entrega do e-mail no celular
 
 ### 7. Reset de senha
 - Abrir o link recebido no celular
 - Confirmar rota `/reset-password`
 - Definir nova senha
 - Voltar para Login
+
+### 7b. Alterar senha logado
+- Abrir `/profile`
+- Tocar em `Alterar senha`
+- Definir nova senha e confirmação
+- Confirmar logout e login com a nova senha
 
 ### 8. Criação de profile
 - Após qualquer login, validar `public.profiles`
@@ -51,11 +63,14 @@
 
 ### Redirect URLs
 - `com.sabercristao.app://login-callback/`
-- `com.sabercristao.app://reset-password/`
+- `com.sabercristao.app://reset-password`
+
+## SMTP
+- Ver [docs/supabase_smtp_setup.md](supabase_smtp_setup.md)
 
 ## Deep links usados
 - Login Google: `com.sabercristao.app://login-callback/`
-- Reset password: `com.sabercristao.app://reset-password/`
+- Reset password: `com.sabercristao.app://reset-password`
 
 ## Como testar no Android
 1. Instalar o APK com `--dart-define` correto.

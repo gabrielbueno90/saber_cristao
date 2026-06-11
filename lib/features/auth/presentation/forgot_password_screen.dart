@@ -15,7 +15,9 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -31,7 +33,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         color: AppTheme.backgroundLight,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
+          child: Form(
+            key: _formKey,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
             const Text(
@@ -43,40 +47,76 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               'Informe seu email para receber o link de recuperação.',
             ),
             AppSpacing.v24,
-            TextField(
+            TextFormField(
               controller: emailController,
+              enabled: !_loading,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              keyboardType: TextInputType.emailAddress,
+              validator: _validateEmail,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             AppSpacing.v24,
             AppPrimaryButton(
               label: 'Enviar link',
-              onPressed: () async {
-                await ref
-                    .read(authControllerProvider.notifier)
-                    .sendPasswordReset(
-                      emailController.text.trim(),
-                      redirectTo: 'com.sabercristao.app://reset-password/',
-                    );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Enviamos um link de recuperação para o seu email.',
-                      ),
-                    ),
-                  );
-                }
-              },
+              isLoading: _loading,
+              onPressed: _loading ? null : _sendResetLink,
             ),
             AppSpacing.v16,
             AppOutlineButton(
               label: 'Voltar para Login',
-              onPressed: () => context.go('/login'),
+              onPressed: _loading ? null : () => context.go('/login'),
             ),
             ],
+          ),
           ),
         ),
       ),
     );
+  }
+
+  String? _validateEmail(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'Informe seu email.';
+    }
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(trimmed)) {
+      return 'Informe um email válido.';
+    }
+    return null;
+  }
+
+  Future<void> _sendResetLink() async {
+    final valid = _formKey.currentState?.validate() ?? false;
+    if (!valid) return;
+    setState(() => _loading = true);
+    try {
+      final sent = await ref.read(authControllerProvider.notifier).sendPasswordReset(
+            emailController.text.trim(),
+            redirectTo: 'com.sabercristao.app://reset-password',
+          );
+      if (!sent) {
+        throw Exception('reset_failed');
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Se este e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível enviar o link agora. Tente novamente em instantes.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 }

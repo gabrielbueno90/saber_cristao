@@ -15,13 +15,16 @@ Esperado:
 - profile criado automaticamente na tabela `profiles`.
 
 ## 2) Fallback mock
-1. Rodar o app sem `SUPABASE_URL` ou `SUPABASE_ANON_KEY`.
+1. Rodar o app sem `SUPABASE_URL` ou `SUPABASE_ANON_KEY`, mas com `ENABLE_MOCK_AUTH=true`.
 2. Confirmar o chip `Modo mock`.
 
 Esperado:
 - auth entra no fallback local/mock;
 - quiz continua funcionando;
 - perguntas usam fallback mock.
+
+Sem `ENABLE_MOCK_AUTH=true`, o app deve falhar na inicializacao com erro claro
+de configuracao para o desenvolvedor.
 
 ## 3) Perguntas reais
 1. Estar autenticado no modo real.

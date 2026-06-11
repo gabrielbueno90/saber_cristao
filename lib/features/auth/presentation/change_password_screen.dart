@@ -1,80 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:saber_cristao/app/theme.dart';
 import 'package:saber_cristao/core/constants/app_spacing.dart';
 import 'package:saber_cristao/features/auth/presentation/auth_controller.dart';
-import 'package:saber_cristao/features/auth/presentation/auth_state.dart';
 import 'package:saber_cristao/shared/widgets/app_action_buttons.dart';
 
-class ResetPasswordScreen extends ConsumerStatefulWidget {
-  const ResetPasswordScreen({super.key});
+class ChangePasswordScreen extends ConsumerStatefulWidget {
+  const ChangePasswordScreen({super.key});
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
+class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final passwordController = TextEditingController();
-  final confirmController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
   bool _loading = false;
 
   @override
   void dispose() {
-    passwordController.dispose();
-    confirmController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final canSubmit =
-        !_loading &&
-        (authState.requiresPasswordReset ||
-            authState.status == AuthStatus.authenticated);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Redefinir senha')),
-      body: Container(
-        color: AppTheme.backgroundLight,
+      appBar: AppBar(title: const Text('Alterar senha')),
+      body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
             const Text(
-              'Definir nova senha',
+              'Defina uma nova senha',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
             ),
             AppSpacing.v8,
             const Text(
-              'Escolha uma senha nova para continuar usando o Saber Cristão.',
+              'Use uma senha nova para continuar acessando sua conta com segurança.',
             ),
             AppSpacing.v24,
-            if (!canSubmit) ...[
-              const Text(
-                'Estamos preparando sua sessão de recuperação. Se a tela não liberar em alguns instantes, o link pode estar expirado e você pode solicitar um novo e-mail.',
-                style: TextStyle(color: AppTheme.textMuted),
-              ),
-              AppSpacing.v16,
-            ],
             Form(
               key: _formKey,
               child: Column(
                 children: [
                   TextFormField(
-                    controller: passwordController,
+                    controller: _passwordController,
                     obscureText: true,
-                    enabled: canSubmit,
+                    enabled: !_loading,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: _validatePassword,
                     decoration: const InputDecoration(labelText: 'Nova senha'),
                   ),
                   AppSpacing.v16,
                   TextFormField(
-                    controller: confirmController,
+                    controller: _confirmController,
                     obscureText: true,
-                    enabled: canSubmit,
+                    enabled: !_loading,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: _validateConfirm,
                     decoration:
@@ -87,20 +72,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             AppPrimaryButton(
               label: 'Atualizar senha',
               isLoading: _loading,
-              onPressed: canSubmit ? _submit : null,
+              onPressed: _loading ? null : _submit,
             ),
-            AppSpacing.v16,
+            AppSpacing.v12,
             AppOutlineButton(
-              label: authState.status == AuthStatus.authenticated
-                  ? 'Voltar para início'
-                  : 'Voltar para Login',
-              onPressed: _loading
-                  ? null
-                  : () => context.go(
-                        authState.status == AuthStatus.authenticated
-                            ? '/home'
-                            : '/login',
-                      ),
+              label: 'Voltar para Perfil',
+              onPressed: _loading ? null : () => context.go('/profile'),
             ),
           ],
         ),
@@ -121,7 +98,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (confirm.length < 6) {
       return 'A senha deve ter pelo menos 6 caracteres.';
     }
-    if (confirm != passwordController.text.trim()) {
+    if (confirm != _passwordController.text.trim()) {
       return 'As senhas não conferem.';
     }
     return null;
@@ -134,16 +111,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .updatePassword(passwordController.text.trim());
-      ref.read(authControllerProvider.notifier).clearPasswordRecovery();
+          .updatePassword(_passwordController.text.trim());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Senha atualizada com sucesso.')),
       );
-      final authState = ref.read(authControllerProvider);
-      context.go(
-        authState.status == AuthStatus.authenticated ? '/home' : '/login',
-      );
+      context.go('/profile');
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

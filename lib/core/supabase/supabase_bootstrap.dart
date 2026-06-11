@@ -1,7 +1,10 @@
+import 'package:saber_cristao/core/app_config.dart';
 import 'package:saber_cristao/core/supabase/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> bootstrapSupabase() async {
+  AppConfig.validateRuntimeConfiguration();
+
   if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
     return;
   }
@@ -11,7 +14,9 @@ Future<void> bootstrapSupabase() async {
       url: SupabaseConfig.url,
       anonKey: SupabaseConfig.anonKey,
     );
-  } catch (_) {
-    // Keep app startup resilient: if Supabase fails, app continues in fallback mode.
+  } catch (error) {
+    throw StateError(
+      'Falha ao inicializar o Supabase neste build: $error',
+    );
   }
 }
